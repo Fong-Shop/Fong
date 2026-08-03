@@ -3,7 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>商品目錄</title>
+  <title>FONG 煙火精選目錄</title>
+
+  <!-- ======================================================== -->
+  <!-- ⬇️【LINE / 社交軟體 網址預覽卡片設定 (OG 標籤)】⬇️ -->
+  <!-- ======================================================== -->
+  <meta property="og:title" content="FONG 煙火精選商品目錄">
+  <meta property="og:description" content="提供最新煙火款式、價格及現場施放影片展示，歡迎選購！">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://fong-shop.github.io/Fong/">
+  
+  <!-- LINE 貼上網址時顯示的預覽大圖 (需寫完整網址) -->
+  <meta property="og:image" content="https://fong-shop.github.io/Fong/511198_0.jpg">
+
   <style>
     * { box-sizing: border-box; }
     body {
@@ -160,7 +172,7 @@
         originalPrice: 150,
         specialPrice: 50
       },
-      // ⬇️ 新增商品請複製下面這段，貼在上面這行之後即可：
+      // ⬇️ 今後新增商品，請複製下方格式貼在上面這行之後：
       /*
       {
         title: "商品名稱",
@@ -175,7 +187,7 @@
     // ⬆️【商品資料編輯區結束】⬆️
     // ========================================================
 
-    // 自動抓取 YouTube ID 並轉成嵌入網址的函式
+    // 自動抓取 YouTube ID 並轉成內嵌網址
     function getEmbedUrl(url) {
       if (!url) return '';
       let videoId = '';
