@@ -3,85 +3,100 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>商品目錄</title>
+  <title>FONG 煙火目錄</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      justify-content: center;
-    }
-
-    .container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-      max-width: 1000px;
-      width: 100%;
-    }
-
+    body { font-family: sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; display: flex; justify-content: center; }
+    .container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 1000px; width: 100%; }
+    
     .product-card {
-      background-color: #000;
-      color: #fff;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-      border: 2px solid #000;
-      display: flex;
-      flex-direction: column;
+      background-color: #000; color: #fff; border-radius: 12px; overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); border: 2px solid #000;
+      display: flex; flex-direction: column;
     }
 
-    /* 讓影片和圖片保持統一的比例與大小 */
-    .product-card iframe,
-    .product-card img {
+    /* 影片/圖片容器：設定為相對定位 (relative)，方便疊加 */
+    .media-container {
+      position: relative;
       width: 100%;
-      height: 250px;
-      border: none;
-      object-fit: cover;
+      height: 220px; /* 卡片上半部高度 */
+      cursor: pointer; /* 鼠標移上去變手指，提示可點擊 */
+      background-color: #333; /* 預載入背景色 */
     }
 
-    .card-info {
-      padding: 15px;
-      text-align: center;
+    /* 平常顯示的自定義封面圖 */
+    .media-container img {
+      width: 100%; height: 100%; object-fit: contain; /* 完整顯示圖片，不裁切 */
+      position: absolute; top: 0; left: 0; z-index: 10; /* 最上層 */
+      transition: opacity 0.3s; /* 淡出效果 */
     }
 
-    .title {
-      font-size: 1.2rem;
-      font-weight: bold;
-      margin-bottom: 8px;
+    /* 點擊播放按鈕 (大三角形) */
+    .play-button {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60px; height: 60px;
+      background-color: rgba(0,0,0,0.7); /* 半透明黑底 */
+      border-radius: 50%; border: 3px solid #fff;
+      z-index: 20; /* 比圖片更高 */
+      display: flex; justify-content: center; align-items: center;
+      transition: all 0.2s;
+    }
+    .play-button::after {
+      content: ''; display: block;
+      width: 0; height: 0;
+      border-style: solid; border-width: 15px 0 15px 25px;
+      border-color: transparent transparent transparent #fff; /* 白色三角形 */
+      margin-left: 5px; /* 微調三角形位置 */
+    }
+    .media-container:hover .play-button { transform: translate(-50%, -50%) scale(1.1); background-color: rgba(255,0,0,0.8); /* 懸停變紅 */ }
+
+    /* 預藏的 YouTube 影片 iframe */
+    .media-container iframe {
+      width: 100%; height: 100%; border: none;
+      position: absolute; top: 0; left: 0;
+      z-index: 5; /* 藏在圖片下面 */
     }
 
-    .price-group {
-      font-size: 0.95rem;
+    /* 【切換狀態用的 CSS Class】：當 JavaScript 加上此 class 時，隱藏圖片與按鈕 */
+    .media-container.playing img,
+    .media-container.playing .play-button {
+      opacity: 0;
+      pointer-events: none; /* 防止圖片阻擋影片操作 */
     }
 
-    .original-price {
-      text-decoration: line-through;
-      color: #aaa;
-      margin-right: 8px;
-    }
+    /* 卡片下半部文字 */
+    .card-info { padding: 15px; text-align: center; }
+    .title { font-size: 1.1rem; font-weight: bold; margin-bottom: 8px; }
+    .price-group { font-size: 0.9rem; }
+    .original-price { text-decoration: line-through; color: #aaa; margin-right: 8px; }
+    .special-price { color: #ff4d4d; font-weight: bold; font-size: 1rem; }
 
-    .special-price {
-      color: #ff4d4d;
-      font-weight: bold;
-      font-size: 1.1rem;
-    }
   </style>
 </head>
 <body>
 
   <div class="container">
 
-    <!-- 第一款商品：蘋果小高空(大花) [內嵌 YouTube 影片] -->
+    <!-- 商品卡片：蘋果小高空 (點擊圖片播放影片) -->
     <div class="product-card">
-      <iframe 
-        src="https://www.youtube.com/embed/IyQ0Q_4oKbo" 
-        title="蘋果小高空(大花)" 
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-        allowfullscreen>
-      </iframe>
+      <!-- 媒體容器 -->
+      <div class="media-container" id="video1" onclick="playVideo('video1')">
+        <!-- 你的自定義封面圖 (請上傳 apple_cover.jpg) -->
+        <img src="apple_cover.jpg" alt="蘋果小高空(大花)">
+        
+        <!-- 點擊播放按鈕 (CSS 畫的) -->
+        <div class="play-button"></div>
+
+        <!-- 預藏影片 (加上 id 並使用 embed 網址，結尾加上 ?enablejsapi=1，並設定自動播放參數但不真的生效，由 JS 控制) -->
+        <iframe 
+          id="iframe1"
+          src="https://www.youtube.com/embed/IyQ0Q_4oKbo?enablejsapi=1" 
+          title="蘋果小高空(大花) 影片" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+          allowfullscreen>
+        </iframe>
+      </div>
+
       <div class="card-info">
         <div class="title">蘋果小高空(大花)</div>
         <div class="price-group">
@@ -91,19 +106,26 @@
       </div>
     </div>
 
-    <!-- 第二款商品：雙泡泡小高空(雙花) [保持圖片/預留替換] -->
-    <div class="product-card">
-      <img src="你的圖片檔名.jpg" alt="雙泡泡小高空(雙花)">
-      <div class="card-info">
-        <div class="title">雙泡泡小高空(雙花)</div>
-        <div class="price-group">
-          售價 <span class="original-price">NT$150</span>
-          特價 <span class="special-price">NT$50</span>
-        </div>
-      </div>
-    </div>
-
   </div>
+
+  <!-- 【JavaScript 程式碼】：控制點擊切換與自動播放 -->
+  <script>
+    function playVideo(containerId) {
+      const container = document.getElementById(containerId);
+      const iframe = container.querySelector('iframe');
+
+      // 1. 加上 class，讓圖片與按鈕淡出隱藏
+      container.classList.add('playing');
+
+      // 2. 透過 JavaScript API 通知 YouTube 影片開始播放
+      // (這需要 YouTube API 的幫助，最簡單的作法是重新載入一個加上 autoplay=1 的網址)
+      const currentSrc = iframe.src;
+      if (currentSrc.indexOf('autoplay=1') === -1) {
+        // 如果網址還沒有自動播放參數，就加上去並重新載入
+        iframe.src = currentSrc + "&autoplay=1";
+      }
+    }
+  </script>
 
 </body>
 </html>
