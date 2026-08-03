@@ -5,15 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FONG 煙火精選目錄</title>
 
-  <!-- ======================================================== -->
-  <!-- ⬇️【LINE / 社交軟體 網址預覽卡片設定 (OG 標籤)】⬇️ -->
-  <!-- ======================================================== -->
+  <!-- LINE / 社交軟體 網址預覽卡片設定 (OG 標籤) -->
   <meta property="og:title" content="FONG 煙火精選商品目錄">
   <meta property="og:description" content="提供最新煙火款式、價格及現場施放影片展示，歡迎選購！">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://fong-shop.github.io/Fong/">
-  
-  <!-- LINE 貼上網址時顯示的預覽大圖 (需寫完整網址) -->
   <meta property="og:image" content="https://fong-shop.github.io/Fong/messageImage_1785794548467.jpg">
 
   <style>
@@ -22,7 +18,7 @@
       font-family: Arial, sans-serif;
       background-color: #f4f4f4;
       margin: 0;
-      padding: 20px;
+      padding: 20px 20px 80px 20px; /* 底部留白避免被浮動按鈕擋住 */
       display: flex;
       justify-content: center;
     }
@@ -123,6 +119,10 @@
     .card-info {
       padding: 15px;
       text-align: center;
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+      justify-content: space-between;
     }
 
     .title {
@@ -133,6 +133,7 @@
 
     .price-group {
       font-size: 0.95rem;
+      margin-bottom: 12px;
     }
 
     .original-price {
@@ -146,6 +147,52 @@
       font-weight: bold;
       font-size: 1.1rem;
     }
+
+    /* 加入選單按鈕 */
+    .add-cart-btn {
+      width: 100%;
+      padding: 10px;
+      background-color: #333;
+      color: #fff;
+      border: 1px solid #555;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+
+    .add-cart-btn:hover {
+      background-color: #444;
+    }
+
+    .add-cart-btn.selected {
+      background-color: #28a745;
+      color: #fff;
+      border-color: #28a745;
+    }
+
+    /* 右下角浮動購物車按鈕 */
+    .floating-cart {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #06C755; /* LINE 代表色 */
+      color: #fff;
+      padding: 14px 24px;
+      border-radius: 50px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: bold;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      display: none;
+      z-index: 1000;
+      transition: transform 0.2s;
+    }
+
+    .floating-cart:hover {
+      transform: scale(1.05);
+    }
   </style>
 </head>
 <body>
@@ -153,9 +200,14 @@
   <!-- 自動渲染卡片的容器 -->
   <div class="container" id="product-container"></div>
 
+  <!-- 浮動 LINE 結帳按鈕 -->
+  <div class="floating-cart" id="floating-cart" onclick="sendToLine()">
+    🛒 已選取 <span id="cart-count">0</span> 項（點此傳送至 LINE 詢問）
+  </div>
+
   <script>
     // ========================================================
-    // ⬇️【商品資料編輯區】以後要在這裡新增商品！⬇️
+    // ⬇️【商品資料編輯區】⬇️
     // ========================================================
     const products = [
       {
@@ -186,22 +238,12 @@
         originalPrice: 150,
         specialPrice: 50
       },
-      // ⬇️ 今後新增商品，請複製下方格式貼在上面這行之後：
-      /*
-      {
-        title: "商品名稱",
-        image: "圖片檔名.jpg",
-        youtube: "https://www.youtube.com/watch?v=影片ID",
-        originalPrice: 200,
-        specialPrice: 100
-      },
-      */
     ];
-    // ========================================================
-    // ⬆️【商品資料編輯區結束】⬆️
-    // ========================================================
 
-    // 自動抓取 YouTube ID 並轉成內嵌網址
+    // 儲存被選中的商品名稱
+    const selectedItems = new Set();
+
+    // 抓取 YouTube ID 並轉成內嵌網址
     function getEmbedUrl(url) {
       if (!url) return '';
       let videoId = '';
@@ -228,17 +270,22 @@
           <iframe id="iframe-${index}" src="${embedUrl}" title="${item.title}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         </div>
         <div class="card-info">
-          <div class="title">${item.title}</div>
-          <div class="price-group">
-            售價 <span class="original-price">NT$${item.originalPrice}</span>
-            特價 <span class="special-price">NT$${item.specialPrice}</span>
+          <div>
+            <div class="title">${item.title}</div>
+            <div class="price-group">
+              售價 <span class="original-price">NT$${item.originalPrice}</span>
+              特價 <span class="special-price">NT$${item.specialPrice}</span>
+            </div>
           </div>
+          <button class="add-cart-btn" id="btn-${index}" onclick="toggleSelect('${item.title}', ${index})">
+            ＋ 加入詢問清單
+          </button>
         </div>
       `;
       container.appendChild(card);
     });
 
-    // 點擊圖片播放影片邏輯
+    // 點擊播放影片邏輯
     function playVideo(index) {
       const mediaBox = document.getElementById(`media-${index}`);
       const iframe = document.getElementById(`iframe-${index}`);
@@ -249,6 +296,53 @@
       if (!currentSrc.includes('autoplay=1')) {
         iframe.src = currentSrc + (currentSrc.includes('?') ? '&' : '?') + 'autoplay=1';
       }
+    }
+
+    // 切換商品選擇狀態
+    function toggleSelect(title, index) {
+      const btn = document.getElementById(`btn-${index}`);
+      
+      if (selectedItems.has(title)) {
+        selectedItems.delete(title);
+        btn.innerText = '＋ 加入詢問清單';
+        btn.classList.remove('selected');
+      } else {
+        selectedItems.add(title);
+        btn.innerText = '✓ 已加入清單';
+        btn.classList.add('selected');
+      }
+      
+      updateCartUI();
+    }
+
+    // 更新浮動按鈕顯示
+    function updateCartUI() {
+      const count = selectedItems.size;
+      const cartBtn = document.getElementById('floating-cart');
+      const countSpan = document.getElementById('cart-count');
+
+      countSpan.innerText = count;
+
+      if (count > 0) {
+        cartBtn.style.display = 'block';
+      } else {
+        cartBtn.style.display = 'none';
+      }
+    }
+
+    // 打開 LINE 並帶入點單文字
+    function sendToLine() {
+      if (selectedItems.size === 0) return;
+
+      let message = "你好！我想詢問/購買以下煙火商品：\n------------------------\n";
+      selectedItems.forEach(item => {
+        message += `• ${item}\n`;
+      });
+      message += "------------------------\n請問目前都有現貨嗎？";
+
+      // 轉成 LINE 的分享連結 (encodeURIComponent 避免中文亂碼)
+      const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(message)}`;
+      window.location.href = lineUrl;
     }
   </script>
 
