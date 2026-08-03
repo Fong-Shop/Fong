@@ -148,6 +148,41 @@
       font-size: 1.1rem;
     }
 
+    /* 數量選擇區域 */
+    .quantity-control {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 12px;
+    }
+
+    .qty-btn {
+      background-color: #333;
+      color: #fff;
+      border: 1px solid #555;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+    }
+
+    .qty-btn:active {
+      background-color: #555;
+    }
+
+    .qty-number {
+      font-size: 1.1rem;
+      font-weight: bold;
+      min-width: 24px;
+    }
+
     /* 加入選單按鈕 */
     .add-cart-btn {
       width: 100%;
@@ -202,7 +237,7 @@
 
   <!-- 浮動 LINE 結帳按鈕 -->
   <div class="floating-cart" id="floating-cart" onclick="sendToLine()">
-    🛒 已選取 <span id="cart-count">0</span> 項（點此傳送至 LINE 詢問）
+    🛒 已選取 <span id="cart-count">0</span> 項（點此傳送至 LINE 訂購）
   </div>
 
   <script>
@@ -240,8 +275,8 @@
       },
     ];
 
-    // 儲存被選中的商品名稱
-    const selectedItems = new Set();
+    // 儲存被選中的商品資料 { "商品名稱": 數量 }
+    const selectedItems = {};
 
     // 抓取 YouTube ID 並轉成內嵌網址
     function getEmbedUrl(url) {
@@ -277,8 +312,16 @@
               特價 <span class="special-price">NT$${item.specialPrice}</span>
             </div>
           </div>
+
+          <!-- 數量選擇器 -->
+          <div class="quantity-control">
+            <div class="qty-btn" onclick="changeQty(${index}, -1)">-</div>
+            <span class="qty-number" id="qty-${index}">1</span>
+            <div class="qty-btn" onclick="changeQty(${index}, 1)">+</div>
+          </div>
+
           <button class="add-cart-btn" id="btn-${index}" onclick="toggleSelect('${item.title}', ${index})">
-            ＋ 加入詢問清單
+            ＋ 加入購買清單
           </button>
         </div>
       `;
@@ -298,16 +341,33 @@
       }
     }
 
+    // 加減數量邏輯
+    function changeQty(index, delta) {
+      const qtySpan = document.getElementById(`qty-${index}`);
+      let currentQty = parseInt(qtySpan.innerText);
+      currentQty += delta;
+      
+      if (currentQty < 1) currentQty = 1; // 最小數值為 1
+      qtySpan.innerText = currentQty;
+
+      // 如果該商品已經加入清單，同步更新已選數量
+      const title = products[index].title;
+      if (selectedItems[title]) {
+        selectedItems[title] = currentQty;
+      }
+    }
+
     // 切換商品選擇狀態
     function toggleSelect(title, index) {
       const btn = document.getElementById(`btn-${index}`);
+      const currentQty = parseInt(document.getElementById(`qty-${index}`).innerText);
       
-      if (selectedItems.has(title)) {
-        selectedItems.delete(title);
-        btn.innerText = '＋ 加入詢問清單';
+      if (selectedItems[title]) {
+        delete selectedItems[title];
+        btn.innerText = '＋ 加入購買清單';
         btn.classList.remove('selected');
       } else {
-        selectedItems.add(title);
+        selectedItems[title] = currentQty;
         btn.innerText = '✓ 已加入清單';
         btn.classList.add('selected');
       }
@@ -317,7 +377,7 @@
 
     // 更新浮動按鈕顯示
     function updateCartUI() {
-      const count = selectedItems.size;
+      const count = Object.keys(selectedItems).length;
       const cartBtn = document.getElementById('floating-cart');
       const countSpan = document.getElementById('cart-count');
 
@@ -330,14 +390,14 @@
       }
     }
 
-    // 打開 LINE 並帶入點單文字
+    // 打開 LINE 並帶入訂購文字
     function sendToLine() {
-      if (selectedItems.size === 0) return;
+      if (Object.keys(selectedItems).length === 0) return;
 
-      let message = "你好！我想詢問/購買以下煙火商品：\n------------------------\n";
-      selectedItems.forEach(item => {
-        message += `• ${item}\n`;
-      });
+      let message = "你好！我想購買以下商品：\n------------------------\n";
+      for (let title in selectedItems) {
+        message += `• ${title} x ${selectedItems[title]}\n`;
+      }
       message += "------------------------\n請問目前都有現貨嗎？";
 
       // 轉成 LINE 的分享連結 (encodeURIComponent 避免中文亂碼)
