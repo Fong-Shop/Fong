@@ -239,12 +239,11 @@
 
   <script>
     // ⬇️【請替換為你的 Google 試算表 CSV 發布網址】⬇️
-    const SHEET_CSV_URL = "YOUR_GOOGLE_SHEET_CSV_URL";
+    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSHS5B2PbFuAzut7B0244ANb7xokqOflGVe6yVtRmbM9zTmcCoUnbm3pjN4U63IFqDL9GEbNrzaLem/pubhtml";
 
     let products = [];
     const selectedItems = {};
 
-    // 抓取 YouTube ID 並轉成內嵌網址
     function getEmbedUrl(url) {
       if (!url) return '';
       let videoId = '';
@@ -256,10 +255,28 @@
       return `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
     }
 
-    // 將 CSV 文字解析為 JSON 陣列
+    // 中英文欄位對照表
+    const headerMap = {
+      '商品名稱': 'title',
+      'title': 'title',
+      '圖片檔名': 'image',
+      'image': 'image',
+      '影片網址': 'youtube',
+      'youtube': 'youtube',
+      '原價': 'originalPrice',
+      'originalPrice': 'originalPrice',
+      '特價': 'specialPrice',
+      'specialPrice': 'specialPrice',
+      '狀態': 'status',
+      'status': 'status'
+    };
+
     function parseCSV(csvText) {
       const lines = csvText.trim().split('\n');
-      const headers = lines[0].split(',').map(h => h.trim());
+      const rawHeaders = lines[0].split(',').map(h => h.trim());
+      
+      // 將中文或英文標題轉換為程式統一使用的英文欄位名
+      const headers = rawHeaders.map(h => headerMap[h] || h);
       const result = [];
 
       for (let i = 1; i < lines.length; i++) {
@@ -274,7 +291,6 @@
       return result;
     }
 
-    // 載入 Google 試算表資料
     async function loadProducts() {
       try {
         const response = await fetch(SHEET_CSV_URL);
@@ -289,12 +305,16 @@
       }
     }
 
-    // 渲染商品卡片
     function renderProducts() {
       const container = document.getElementById('product-container');
       container.innerHTML = '';
 
       products.forEach((item, index) => {
+        // 判斷狀態：若填寫 N、n 或 下架，則跳過不顯示
+        if (item.status && (item.status.toUpperCase() === 'N' || item.status === '下架')) {
+          return;
+        }
+
         const embedUrl = getEmbedUrl(item.youtube);
         const card = document.createElement('div');
         card.className = 'product-card';
@@ -391,7 +411,6 @@
       window.location.href = lineUrl;
     }
 
-    // 頁面載入後自動抓取資料
     loadProducts();
   </script>
 
