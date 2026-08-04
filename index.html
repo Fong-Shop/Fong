@@ -238,7 +238,6 @@
   </div>
 
   <script>
-    // ⬇️【請替換為你的 Google 試算表 CSV 發布網址】⬇️
     const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSHS5B2PbFuAzut7B0244ANb7xokqOflGVe6yVtRmbM9zTmcCoUnbm3pjN4U63IFqDL9GEbNrzaLem/pub?output=csv";
 
     let products = [];
@@ -255,6 +254,7 @@
       return `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
     }
 
+    // 正確解析 CSV 的雙引號與逗號
     function parseCSVText(text) {
       const lines = text.trim().split(/\r?\n/);
       return lines.map(line => {
@@ -265,36 +265,47 @@
           if (char === '"') {
             insideQuote = !insideQuote;
           } else if (char === ',' && !insideQuote) {
-            row.push(entry.trim());
+            row.push(entry.trim().replace(/^"|"$/g, ''));
             entry = '';
           } else {
             entry += char;
           }
         }
-        row.push(entry.trim());
+        row.push(entry.trim().replace(/^"|"$/g, ''));
         return row;
       });
     }
 
     async function loadProducts() {
       try {
-        // 💡 加上時間戳記強迫不使用快取
         const cacheBuster = (SHEET_CSV_URL.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
         const response = await fetch(SHEET_CSV_URL + cacheBuster, { cache: 'no-store' });
         const data = await response.text();
         const rows = parseCSVText(data);
         
+        if (rows.length < 2) return;
+
+        // 💡 動態對照標題欄位位置
+        const headers = rows[0];
+        const titleIdx = headers.indexOf('商品名稱');
+        const imageIdx = headers.indexOf('圖片檔名');
+        const ytIdx = headers.indexOf('影片網址');
+        const origIdx = headers.indexOf('原價');
+        const specIdx = headers.indexOf('特價');
+        const statusIdx = headers.indexOf('狀態');
+
         products = [];
         for (let i = 1; i < rows.length; i++) {
           const r = rows[i];
-          if (!r[0]) continue;
+          if (!r[titleIdx]) continue;
+
           products.push({
-            title: r[0] || '',
-            image: r[1] || '',
-            youtube: r[2] || '',
-            originalPrice: r[3] || '',
-            specialPrice: r[4] || '',
-            status: r[5] || ''
+            title: r[titleIdx] || '',
+            image: r[imageIdx] || '',
+            youtube: r[ytIdx] || '',
+            originalPrice: r[origIdx] || '',
+            specialPrice: r[specIdx] || '',
+            status: r[statusIdx] || ''
           });
         }
         
@@ -311,8 +322,9 @@
       container.innerHTML = '';
 
       products.forEach((item, index) => {
-        // 判斷下架：只要狀態填寫 N、n 或 下架，一律隱藏
-        if (item.status && (item.status.trim().toUpperCase() === 'N' || item.status.trim() === '下架')) {
+        // 💡 嚴格判斷下架：只要狀態包含 N、n 或 下架，一律不顯示
+        const statusStr = (item.status || '').toString().trim().toUpperCase();
+        if (statusStr === 'N' || statusStr === '下架') {
           return;
         }
 
