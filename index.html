@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FONG 煙火精選目錄</title>
 
-  <!-- LINE / 社交軟體 網址預覽卡片設定 (OG 標籤) -->
   <meta property="og:title" content="FONG 煙火精選商品目錄">
   <meta property="og:description" content="提供最新煙火款式、價格及現場施放影片展示，歡迎選購！">
   <meta property="og:type" content="website">
@@ -238,7 +237,8 @@
   </div>
 
   <script>
-    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSHS5B2PbFuAzut7B0244ANb7xokqOflGVe6yVtRmbM9zTmcCoUnbm3pjN4U63IFqDL9GEbNrzaLem/pub?output=csv";
+    // ⬇️【請把這串網址，替換成你剛剛部署拿到的 GAS 網頁應用程式網址】⬇️
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdvebTnsOSgEURWczwLjLuQPIz9tbHWKSpEIgsT38V5jR7vzHUHbFiPGtH5F0rQJEZWA/exec";
 
     let products = [];
     const selectedItems = {};
@@ -254,66 +254,34 @@
       return `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
     }
 
-    // 正確解析 CSV 的雙引號與逗號
-    function parseCSVText(text) {
-      const lines = text.trim().split(/\r?\n/);
-      return lines.map(line => {
-        const row = [];
-        let insideQuote = false;
-        let entry = '';
-        for (let char of line) {
-          if (char === '"') {
-            insideQuote = !insideQuote;
-          } else if (char === ',' && !insideQuote) {
-            row.push(entry.trim().replace(/^"|"$/g, ''));
-            entry = '';
-          } else {
-            entry += char;
-          }
-        }
-        row.push(entry.trim().replace(/^"|"$/g, ''));
-        return row;
-      });
-    }
-
     async function loadProducts() {
       try {
-        const cacheBuster = (SHEET_CSV_URL.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
-        const response = await fetch(SHEET_CSV_URL + cacheBuster, { cache: 'no-store' });
-        const data = await response.text();
-        const rows = parseCSVText(data);
+        // 加上時間戳記，確保不會被瀏覽器快取
+        const cacheBuster = (GAS_API_URL.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
+        const response = await fetch(GAS_API_URL + cacheBuster, { cache: 'no-store' });
         
-        if (rows.length < 2) return;
-
-        // 💡 動態對照標題欄位位置
-        const headers = rows[0];
-        const titleIdx = headers.indexOf('商品名稱');
-        const imageIdx = headers.indexOf('圖片檔名');
-        const ytIdx = headers.indexOf('影片網址');
-        const origIdx = headers.indexOf('原價');
-        const specIdx = headers.indexOf('特價');
-        const statusIdx = headers.indexOf('狀態');
-
+        // 直接取得即時的 JSON 資料，不用再辛苦切 CSV 了！
+        const data = await response.json();
+        
         products = [];
-        for (let i = 1; i < rows.length; i++) {
-          const r = rows[i];
-          if (!r[titleIdx]) continue;
-
+        data.forEach(item => {
+          if (!item['商品名稱']) return;
+          
           products.push({
-            title: r[titleIdx] || '',
-            image: r[imageIdx] || '',
-            youtube: r[ytIdx] || '',
-            originalPrice: r[origIdx] || '',
-            specialPrice: r[specIdx] || '',
-            status: r[statusIdx] || ''
+            title: item['商品名稱'] || '',
+            image: item['圖片檔名'] || '',
+            youtube: item['影片網址'] || '',
+            originalPrice: item['原價'] || '',
+            specialPrice: item['特價'] || '',
+            status: item['狀態'] || ''
           });
-        }
+        });
         
         document.getElementById('loading').style.display = 'none';
         renderProducts();
       } catch (error) {
         console.error('載入資料失敗:', error);
-        document.getElementById('loading').innerText = '商品載入失敗，請檢查試算表權限。';
+        document.getElementById('loading').innerText = '商品載入失敗，請檢查網址與權限設定。';
       }
     }
 
@@ -322,7 +290,7 @@
       container.innerHTML = '';
 
       products.forEach((item, index) => {
-        // 💡 嚴格判斷下架：只要狀態包含 N、n 或 下架，一律不顯示
+        // 即時判斷下架：只要狀態包含 N、n 或 下架，一律隱藏
         const statusStr = (item.status || '').toString().trim().toUpperCase();
         if (statusStr === 'N' || statusStr === '下架') {
           return;
