@@ -238,8 +238,9 @@
   </div>
 
   <script>
-    // ⬇️【請替換為你的 Google 試算表 CSV 發布網址】⬇️
-    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSHS5B2PbFuAzut7B0244ANb7xokqOflGVe6yVtRmbM9zTmcCoUnbm3pjN4U63IFqDL9GEbNrzaLem/pubhtml";
+    // 你的 Google 試算表 ID（從截圖網址提取）
+    const SHEET_ID = "1HpBJznGZD03UFCpaw5BQCybonLods7HdgZfTzjpAWHw";
+    const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
 
     let products = [];
     const selectedItems = {};
@@ -255,53 +256,35 @@
       return `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
     }
 
-    // 中英文欄位對照表
-    const headerMap = {
-      '商品名稱': 'title',
-      'title': 'title',
-      '圖片檔名': 'image',
-      'image': 'image',
-      '影片網址': 'youtube',
-      'youtube': 'youtube',
-      '原價': 'originalPrice',
-      'originalPrice': 'originalPrice',
-      '特價': 'specialPrice',
-      'specialPrice': 'specialPrice',
-      '狀態': 'status',
-      'status': 'status'
-    };
-
-    function parseCSV(csvText) {
-      const lines = csvText.trim().split('\n');
-      const rawHeaders = lines[0].split(',').map(h => h.trim());
-      
-      // 將中文或英文標題轉換為程式統一使用的英文欄位名
-      const headers = rawHeaders.map(h => headerMap[h] || h);
-      const result = [];
-
-      for (let i = 1; i < lines.length; i++) {
-        if (!lines[i].trim()) continue;
-        const currentline = lines[i].split(',');
-        const obj = {};
-        for (let j = 0; j < headers.length; j++) {
-          obj[headers[j]] = currentline[j] ? currentline[j].trim() : '';
-        }
-        result.push(obj);
-      }
-      return result;
-    }
-
     async function loadProducts() {
       try {
-        const response = await fetch(SHEET_CSV_URL);
-        const data = await response.text();
-        products = parseCSV(data);
+        const response = await fetch(SHEET_URL);
+        const text = await response.text();
         
+        // 剖析 Google GViz 回傳的 JSON 格式
+        const jsonString = text.substring(47, text.length - 2);
+        const json = JSON.parse(jsonString);
+        
+        const rows = json.table.rows;
+        
+        // 解析第一列之後的所有資料列
+        products = rows.map(row => {
+          const c = row.c;
+          return {
+            title: c[0] ? c[0].v : '',
+            image: c[1] ? c[1].v : '',
+            youtube: c[2] ? c[2].v : '',
+            originalPrice: c[3] ? c[3].v : '',
+            specialPrice: c[4] ? c[4].v : '',
+            status: c[5] ? c[5].v : ''
+          };
+        });
+
         document.getElementById('loading').style.display = 'none';
         renderProducts();
       } catch (error) {
         console.error('載入資料失敗:', error);
-        document.getElementById('loading').innerText = '商品載入失敗，請檢查網址或試算表設定。';
+        document.getElementById('loading').innerText = '商品載入失敗，請檢查試算表權限。';
       }
     }
 
@@ -310,8 +293,8 @@
       container.innerHTML = '';
 
       products.forEach((item, index) => {
-        // 判斷狀態：若填寫 N、n 或 下架，則跳過不顯示
-        if (item.status && (item.status.toUpperCase() === 'N' || item.status === '下架')) {
+        // 判斷下架狀態
+        if (item.status && (item.status.toString().toUpperCase() === 'N' || item.status === '下架')) {
           return;
         }
 
