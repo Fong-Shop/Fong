@@ -244,6 +244,7 @@
     let products = [];
     const selectedItems = {};
 
+    // 抓取 YouTube ID 並轉成內嵌網址
     function getEmbedUrl(url) {
       if (!url) return '';
       let videoId = '';
@@ -255,6 +256,7 @@
       return `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
     }
 
+    // 將 CSV 文字解析為 JSON 陣列
     function parseCSV(csvText) {
       const lines = csvText.trim().split('\n');
       const headers = lines[0].split(',').map(h => h.trim());
@@ -272,6 +274,7 @@
       return result;
     }
 
+    // 載入 Google 試算表資料
     async function loadProducts() {
       try {
         const response = await fetch(SHEET_CSV_URL);
@@ -286,16 +289,12 @@
       }
     }
 
+    // 渲染商品卡片
     function renderProducts() {
       const container = document.getElementById('product-container');
       container.innerHTML = '';
 
       products.forEach((item, index) => {
-        // 💡 判斷 status：如果填寫 N 或 n，直接跳過不渲染（下架）
-        if (item.status && item.status.toUpperCase() === 'N') {
-          return;
-        }
-
         const embedUrl = getEmbedUrl(item.youtube);
         const card = document.createElement('div');
         card.className = 'product-card';
@@ -392,6 +391,7 @@
       window.location.href = lineUrl;
     }
 
+    // 頁面載入後自動抓取資料
     loadProducts();
   </script>
 
