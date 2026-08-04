@@ -237,7 +237,6 @@
   </div>
 
   <script>
-    // ⬇️【請把這串網址，替換成你剛剛部署拿到的 GAS 網頁應用程式網址】⬇️
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdvebTnsOSgEURWczwLjLuQPIz9tbHWKSpEIgsT38V5jR7vzHUHbFiPGtH5F0rQJEZWA/exec";
 
     let products = [];
@@ -255,19 +254,28 @@
     }
 
     async function loadProducts() {
+      // ⚡ 步驟 1：嘗試從 localStorage 讀取快取（極速秒開）
+      const cachedData = localStorage.getItem('fong_products_cache');
+      if (cachedData) {
+        try {
+          products = JSON.parse(cachedData);
+          document.getElementById('loading').style.display = 'none';
+          renderProducts();
+        } catch (e) {
+          console.error('快取解析失敗', e);
+        }
+      }
+
+      // ⚡ 步驟 2：背景發送 API 請求最新資料（保持即時同步）
       try {
-        // 加上時間戳記，確保不會被瀏覽器快取
         const cacheBuster = (GAS_API_URL.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
         const response = await fetch(GAS_API_URL + cacheBuster, { cache: 'no-store' });
-        
-        // 直接取得即時的 JSON 資料，不用再辛苦切 CSV 了！
         const data = await response.json();
         
-        products = [];
+        const freshProducts = [];
         data.forEach(item => {
           if (!item['商品名稱']) return;
-          
-          products.push({
+          freshProducts.push({
             title: item['商品名稱'] || '',
             image: item['圖片檔名'] || '',
             youtube: item['影片網址'] || '',
@@ -276,12 +284,22 @@
             status: item['狀態'] || ''
           });
         });
-        
-        document.getElementById('loading').style.display = 'none';
-        renderProducts();
+
+        // 比對資料是否有變更
+        const freshDataStr = JSON.stringify(freshProducts);
+        if (freshDataStr !== cachedData) {
+          // 有新資料：寫入快取並重新渲染畫面
+          localStorage.setItem('fong_products_cache', freshDataStr);
+          products = freshProducts;
+          document.getElementById('loading').style.display = 'none';
+          renderProducts();
+        }
       } catch (error) {
-        console.error('載入資料失敗:', error);
-        document.getElementById('loading').innerText = '商品載入失敗，請檢查網址與權限設定。';
+        console.error('背景同步失敗:', error);
+        // 若完全沒暫存又失敗才顯示提示
+        if (!cachedData) {
+          document.getElementById('loading').innerText = '商品載入失敗，請檢查網路連線。';
+        }
       }
     }
 
@@ -290,7 +308,6 @@
       container.innerHTML = '';
 
       products.forEach((item, index) => {
-        // 即時判斷下架：只要狀態包含 N、n 或 下架，一律隱藏
         const statusStr = (item.status || '').toString().trim().toUpperCase();
         if (statusStr === 'N' || statusStr === '下架') {
           return;
