@@ -18,7 +18,7 @@
       font-family: Arial, sans-serif;
       background-color: #f4f4f4;
       margin: 0;
-      padding: 20px 20px 80px 20px; /* 底部留白避免被浮動按鈕擋住 */
+      padding: 20px 20px 80px 20px;
       display: flex;
       justify-content: center;
     }
@@ -42,7 +42,6 @@
       flex-direction: column;
     }
 
-    /* 圖片與影片容器 */
     .media-container {
       position: relative;
       width: 100%;
@@ -51,7 +50,6 @@
       background-color: #222;
     }
 
-    /* 封面圖 */
     .media-container img {
       width: 100%;
       height: 100%;
@@ -63,7 +61,6 @@
       transition: opacity 0.3s;
     }
 
-    /* 播放按鈕圖示 */
     .play-button {
       position: absolute;
       top: 50%;
@@ -97,7 +94,6 @@
       background-color: rgba(255, 0, 0, 0.85);
     }
 
-    /* 預藏 iframe 影片 */
     .media-container iframe {
       width: 100%;
       height: 100%;
@@ -108,14 +104,12 @@
       z-index: 5;
     }
 
-    /* 點擊播放後，隱藏封面圖與播放按鈕 */
     .media-container.playing img,
     .media-container.playing .play-button {
       opacity: 0;
       pointer-events: none;
     }
 
-    /* 文字欄位 */
     .card-info {
       padding: 15px;
       text-align: center;
@@ -148,7 +142,6 @@
       font-size: 1.1rem;
     }
 
-    /* 數量選擇區域 */
     .quantity-control {
       display: flex;
       justify-content: center;
@@ -183,7 +176,6 @@
       min-width: 24px;
     }
 
-    /* 加入選單按鈕 */
     .add-cart-btn {
       width: 100%;
       padding: 10px;
@@ -207,12 +199,11 @@
       border-color: #28a745;
     }
 
-    /* 右下角浮動購物車按鈕 */
     .floating-cart {
       position: fixed;
       bottom: 20px;
       right: 20px;
-      background-color: #06C755; /* LINE 代表色 */
+      background-color: #06C755;
       color: #fff;
       padding: 14px 24px;
       border-radius: 50px;
@@ -228,54 +219,29 @@
     .floating-cart:hover {
       transform: scale(1.05);
     }
+
+    #loading {
+      text-align: center;
+      font-size: 1.2rem;
+      color: #666;
+      padding: 50px;
+    }
   </style>
 </head>
 <body>
 
-  <!-- 自動渲染卡片的容器 -->
+  <div id="loading">載入商品目錄中...</div>
   <div class="container" id="product-container"></div>
 
-  <!-- 浮動 LINE 結帳按鈕 -->
   <div class="floating-cart" id="floating-cart" onclick="sendToLine()">
     🛒 已選取 <span id="cart-count">0</span> 項（點此傳送至 LINE 訂購）
   </div>
 
   <script>
-    // ========================================================
-    // ⬇️【商品資料編輯區】⬇️
-    // ========================================================
-    const products = [
-      {
-        title: "蘋果小高空(大花)",
-        image: "511198_0.jpg",
-        youtube: "https://www.youtube.com/watch?v=IyQ0Q_4oKbo",
-        originalPrice: 150,
-        specialPrice: 50
-      },
-      {
-        title: "雙泡泡小高空(雙花)",
-        image: "511200_0.jpg",
-        youtube: "https://www.youtube.com/watch?v=pSP0lhrX5dI",
-        originalPrice: 150,
-        specialPrice: 50
-      },
-      {
-        title: "炸花大吐珠(不吐)",
-        image: "1039713.jpg",
-        youtube: "https://www.youtube.com/watch?v=ZVFhPoESh-4",
-        originalPrice: 150,
-        specialPrice: 50
-      },
-      {
-        title: "一發入魂(特效花束)",
-        image: "messageImage_1780785895048.jpg",
-        youtube: "https://www.youtube.com/watch?v=ZneElIbg91A",
-        originalPrice: 150,
-        specialPrice: 50
-      },
-    ];
+    // ⬇️【請替換為你的 Google 試算表 CSV 發布網址】⬇️
+    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSHS5B2PbFuAzut7B0244ANb7xokqOflGVe6yVtRmbM9zTmcCoUnbm3pjN4U63IFqDL9GEbNrzaLem/pub?output=csv";
 
-    // 儲存被選中的商品資料 { "商品名稱": 數量 }
+    let products = [];
     const selectedItems = {};
 
     // 抓取 YouTube ID 並轉成內嵌網址
@@ -290,81 +256,109 @@
       return `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
     }
 
-    // 動態生成 HTML 商品卡片
-    const container = document.getElementById('product-container');
+    // 將 CSV 文字解析為 JSON 陣列
+    function parseCSV(csvText) {
+      const lines = csvText.trim().split('\n');
+      const headers = lines[0].split(',').map(h => h.trim());
+      const result = [];
 
-    products.forEach((item, index) => {
-      const embedUrl = getEmbedUrl(item.youtube);
-      const card = document.createElement('div');
-      card.className = 'product-card';
-      
-      card.innerHTML = `
-        <div class="media-container" id="media-${index}" onclick="playVideo(${index})">
-          <img src="${item.image}" alt="${item.title}" onerror="this.src='https://via.placeholder.com/300x220?text=無圖片';">
-          <div class="play-button"></div>
-          <iframe id="iframe-${index}" src="${embedUrl}" title="${item.title}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-        </div>
-        <div class="card-info">
-          <div>
-            <div class="title">${item.title}</div>
-            <div class="price-group">
-              售價 <span class="original-price">NT$${item.originalPrice}</span>
-              特價 <span class="special-price">NT$${item.specialPrice}</span>
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        const currentline = lines[i].split(',');
+        const obj = {};
+        for (let j = 0; j < headers.length; j++) {
+          obj[headers[j]] = currentline[j] ? currentline[j].trim() : '';
+        }
+        result.push(obj);
+      }
+      return result;
+    }
+
+    // 載入 Google 試算表資料
+    async function loadProducts() {
+      try {
+        const response = await fetch(SHEET_CSV_URL);
+        const data = await response.text();
+        products = parseCSV(data);
+        
+        document.getElementById('loading').style.display = 'none';
+        renderProducts();
+      } catch (error) {
+        console.error('載入資料失敗:', error);
+        document.getElementById('loading').innerText = '商品載入失敗，請檢查網址或試算表設定。';
+      }
+    }
+
+    // 渲染商品卡片
+    function renderProducts() {
+      const container = document.getElementById('product-container');
+      container.innerHTML = '';
+
+      products.forEach((item, index) => {
+        const embedUrl = getEmbedUrl(item.youtube);
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        
+        card.innerHTML = `
+          <div class="media-container" id="media-${index}" onclick="playVideo(${index})">
+            <img src="${item.image}" alt="${item.title}" onerror="this.src='https://via.placeholder.com/300x220?text=無圖片';">
+            <div class="play-button"></div>
+            <iframe id="iframe-${index}" src="${embedUrl}" title="${item.title}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+          <div class="card-info">
+            <div>
+              <div class="title">${item.title}</div>
+              <div class="price-group">
+                售價 <span class="original-price">NT$${item.originalPrice}</span>
+                特價 <span class="special-price">NT$${item.specialPrice}</span>
+              </div>
             </div>
+
+            <div class="quantity-control">
+              <div class="qty-btn" onclick="changeQty(${index}, -1)">-</div>
+              <span class="qty-number" id="qty-${index}">1</span>
+              <div class="qty-btn" onclick="changeQty(${index}, 1)">+</div>
+            </div>
+
+            <button class="add-cart-btn" id="btn-${index}" onclick="toggleSelect('${item.title}', ${index})">
+              ＋ 加入購買清單
+            </button>
           </div>
+        `;
+        container.appendChild(card);
+      });
+    }
 
-          <!-- 數量選擇器 -->
-          <div class="quantity-control">
-            <div class="qty-btn" onclick="changeQty(${index}, -1)">-</div>
-            <span class="qty-number" id="qty-${index}">1</span>
-            <div class="qty-btn" onclick="changeQty(${index}, 1)">+</div>
-          </div>
-
-          <button class="add-cart-btn" id="btn-${index}" onclick="toggleSelect('${item.title}', ${index})">
-            ＋ 加入清單
-          </button>
-        </div>
-      `;
-      container.appendChild(card);
-    });
-
-    // 點擊播放影片邏輯
     function playVideo(index) {
       const mediaBox = document.getElementById(`media-${index}`);
       const iframe = document.getElementById(`iframe-${index}`);
-
       mediaBox.classList.add('playing');
-
       let currentSrc = iframe.src;
       if (!currentSrc.includes('autoplay=1')) {
         iframe.src = currentSrc + (currentSrc.includes('?') ? '&' : '?') + 'autoplay=1';
       }
     }
 
-    // 加減數量邏輯
     function changeQty(index, delta) {
       const qtySpan = document.getElementById(`qty-${index}`);
       let currentQty = parseInt(qtySpan.innerText);
       currentQty += delta;
-      
-      if (currentQty < 1) currentQty = 1; // 最小數值為 1
+      if (currentQty < 1) currentQty = 1;
       qtySpan.innerText = currentQty;
 
-      // 如果該商品已經加入清單，同步更新已選數量
       const title = products[index].title;
       if (selectedItems[title]) {
         selectedItems[title] = currentQty;
       }
     }
 
-    // 切換商品選擇狀態
     function toggleSelect(title, index) {
       const btn = document.getElementById(`btn-${index}`);
       const currentQty = parseInt(document.getElementById(`qty-${index}`).innerText);
       
       if (selectedItems[title]) {
         delete selectedItems[title];
-        btn.innerText = '＋ 加入清單';
+        btn.innerText = '＋ 加入購買清單';
         btn.classList.remove('selected');
       } else {
         selectedItems[title] = currentQty;
@@ -375,35 +369,30 @@
       updateCartUI();
     }
 
-    // 更新浮動按鈕顯示
     function updateCartUI() {
       const count = Object.keys(selectedItems).length;
       const cartBtn = document.getElementById('floating-cart');
       const countSpan = document.getElementById('cart-count');
 
       countSpan.innerText = count;
-
-      if (count > 0) {
-        cartBtn.style.display = 'block';
-      } else {
-        cartBtn.style.display = 'none';
-      }
+      cartBtn.style.display = count > 0 ? 'block' : 'none';
     }
 
-    // 打開 LINE 並帶入訂購文字
     function sendToLine() {
       if (Object.keys(selectedItems).length === 0) return;
 
-      let message = "你好！我想購買以下商品：\n------------------------\n";
+      let message = "你好！我想購買以下煙火商品：\n------------------------\n";
       for (let title in selectedItems) {
         message += `• ${title} x ${selectedItems[title]}\n`;
       }
       message += "------------------------\n請問目前都有現貨嗎？";
 
-      // 轉成 LINE 的分享連結 (encodeURIComponent 避免中文亂碼)
       const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(message)}`;
       window.location.href = lineUrl;
     }
+
+    // 頁面載入後自動抓取資料
+    loadProducts();
   </script>
 
 </body>
