@@ -36,9 +36,9 @@
       font-size: 0.95rem;
       line-height: 1.5;
       box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      display: none; /* 預設隱藏，有抓到資料才顯示 */
     }
 
-    /* 分類導覽列樣式 */
     .category-nav {
       display: flex;
       gap: 12px;
@@ -47,12 +47,9 @@
       padding-bottom: 5px;
       max-width: 1000px;
       width: 100%;
-      /* 隱藏捲軸但可滑動 */
       scrollbar-width: none; 
     }
-    .category-nav::-webkit-scrollbar {
-      display: none; 
-    }
+    .category-nav::-webkit-scrollbar { display: none; }
 
     .cat-btn {
       padding: 10px 20px;
@@ -65,18 +62,13 @@
       white-space: nowrap;
       transition: all 0.2s;
     }
-
-    .cat-btn:hover {
-      background-color: #444;
-    }
-
+    .cat-btn:hover { background-color: #444; }
     .cat-btn.active {
       background-color: #ff4d4d;
       border-color: #ff4d4d;
       font-weight: bold;
     }
 
-    /* 商品列表容器 */
     .container {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -103,238 +95,84 @@
       cursor: pointer;
       background-color: #222;
     }
-
     .media-container img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 10;
+      top: 0; left: 0; z-index: 10;
       transition: opacity 0.3s;
     }
-
     .play-button {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 50px;
-      height: 50px;
-      background-color: rgba(0, 0, 0, 0.7);
-      border-radius: 50%;
-      border: 2px solid #fff;
-      z-index: 20;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      transition: all 0.2s;
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 50px; height: 50px; background-color: rgba(0, 0, 0, 0.7);
+      border-radius: 50%; border: 2px solid #fff; z-index: 20;
+      display: flex; justify-content: center; align-items: center; transition: all 0.2s;
     }
-
     .play-button::after {
-      content: '';
-      display: block;
-      width: 0;
-      height: 0;
-      border-style: solid;
-      border-width: 10px 0 10px 18px;
-      border-color: transparent transparent transparent #fff;
-      margin-left: 4px;
+      content: ''; display: block; width: 0; height: 0;
+      border-style: solid; border-width: 10px 0 10px 18px;
+      border-color: transparent transparent transparent #fff; margin-left: 4px;
     }
+    .media-container:hover .play-button { transform: translate(-50%, -50%) scale(1.1); background-color: rgba(255, 0, 0, 0.85); }
+    .media-container iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; z-index: 5; }
+    .media-container.playing img, .media-container.playing .play-button { opacity: 0; pointer-events: none; }
 
-    .media-container:hover .play-button {
-      transform: translate(-50%, -50%) scale(1.1);
-      background-color: rgba(255, 0, 0, 0.85);
-    }
+    .card-info { padding: 15px; text-align: center; display: flex; flex-direction: column; flex-grow: 1; justify-content: space-between; }
+    .title { font-size: 1.1rem; font-weight: bold; margin-bottom: 8px; }
+    .price-group { font-size: 0.95rem; margin-bottom: 12px; }
+    .original-price { text-decoration: line-through; color: #aaa; margin-right: 8px; }
+    .special-price { color: #ff4d4d; font-weight: bold; font-size: 1.1rem; }
 
-    .media-container iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 5;
-    }
-
-    .media-container.playing img,
-    .media-container.playing .play-button {
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .card-info {
-      padding: 15px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      flex-grow: 1;
-      justify-content: space-between;
-    }
-
-    .title {
-      font-size: 1.1rem;
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-
-    .price-group {
-      font-size: 0.95rem;
-      margin-bottom: 12px;
-    }
-
-    .original-price {
-      text-decoration: line-through;
-      color: #aaa;
-      margin-right: 8px;
-    }
-
-    .special-price {
-      color: #ff4d4d;
-      font-weight: bold;
-      font-size: 1.1rem;
-    }
-
-    .quantity-control {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 10px;
-      gap: 12px;
-    }
-
+    .quantity-control { display: flex; justify-content: center; align-items: center; margin-bottom: 10px; gap: 12px; }
     .qty-btn {
-      background-color: #333;
-      color: #fff;
-      border: 1px solid #555;
-      width: 32px;
-      height: 32px;
-      border-radius: 6px;
-      font-size: 1.2rem;
-      font-weight: bold;
-      cursor: pointer;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      user-select: none;
+      background-color: #333; color: #fff; border: 1px solid #555;
+      width: 32px; height: 32px; border-radius: 6px; font-size: 1.2rem;
+      font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; user-select: none;
     }
-
-    .qty-btn:active {
-      background-color: #555;
-    }
-
-    .qty-number {
-      font-size: 1.1rem;
-      font-weight: bold;
-      min-width: 24px;
-    }
+    .qty-btn:active { background-color: #555; }
+    .qty-number { font-size: 1.1rem; font-weight: bold; min-width: 24px; }
 
     .add-cart-btn {
-      width: 100%;
-      padding: 10px;
-      background-color: #333;
-      color: #fff;
-      border: 1px solid #555;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.95rem;
-      font-weight: bold;
-      transition: all 0.2s;
+      width: 100%; padding: 10px; background-color: #333; color: #fff;
+      border: 1px solid #555; border-radius: 6px; cursor: pointer;
+      font-size: 0.95rem; font-weight: bold; transition: all 0.2s;
     }
-
-    .add-cart-btn:hover {
-      background-color: #444;
-    }
-
-    .add-cart-btn.selected {
-      background-color: #28a745;
-      color: #fff;
-      border-color: #28a745;
-    }
+    .add-cart-btn:hover { background-color: #444; }
+    .add-cart-btn.selected { background-color: #28a745; color: #fff; border-color: #28a745; }
 
     .floating-cart {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background-color: #06C755;
-      color: #fff;
-      padding: 14px 24px;
-      border-radius: 50px;
-      cursor: pointer;
-      font-size: 1rem;
-      font-weight: bold;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-      display: none;
-      z-index: 1000;
-      transition: transform 0.2s;
+      position: fixed; bottom: 20px; right: 20px; background-color: #06C755;
+      color: #fff; padding: 14px 24px; border-radius: 50px; cursor: pointer;
+      font-size: 1rem; font-weight: bold; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      display: none; z-index: 1000; transition: transform 0.2s;
     }
+    .floating-cart:hover { transform: scale(1.05); }
 
-    .floating-cart:hover {
-      transform: scale(1.05);
-    }
-
-    /* 🚀 側邊浮動按鈕群 (回到頂部 + LINE客服) */
     .floating-tools {
-      position: fixed;
-      bottom: 80px; 
-      right: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      z-index: 999;
-      opacity: 0; /* 預設隱藏，滑動後才出現 */
-      pointer-events: none;
-      transition: opacity 0.3s;
+      position: fixed; bottom: 80px; right: 20px; display: flex; flex-direction: column;
+      gap: 12px; z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.3s;
     }
-
     .tool-btn {
-      width: 45px;
-      height: 45px;
-      border-radius: 50%;
-      background-color: #333;
-      color: #fff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      transition: all 0.2s;
-      text-decoration: none;
-      font-size: 1.2rem;
+      width: 45px; height: 45px; border-radius: 50%; background-color: #333;
+      color: #fff; display: flex; justify-content: center; align-items: center;
+      cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: all 0.2s;
+      text-decoration: none; font-size: 1.2rem;
     }
+    .tool-btn:hover { transform: scale(1.1); }
+    .tool-btn.line-btn { background-color: #00c300; font-size: 1.5rem; }
 
-    .tool-btn:hover {
-      transform: scale(1.1);
-    }
-
-    .tool-btn.line-btn {
-      background-color: #00c300; 
-      font-size: 1.5rem;
-    }
-
-    #loading {
-      text-align: center;
-      font-size: 1.2rem;
-      color: #666;
-      padding: 50px;
-      width: 100%;
-    }
+    #loading { text-align: center; font-size: 1.2rem; color: #666; padding: 50px; width: 100%; }
   </style>
 </head>
 <body>
 
   <div id="loading">載入商品目錄中...</div>
 
-  <!-- 📢 公告區 (文字可以隨時修改) -->
-  <div class="announcement">
-    📢 <strong>最新公告：</strong> 歡迎光臨 FONG 煙火精選目錄！目前中秋商品陸續上架中，庫存變動快，大量訂購請直接點擊右下方 LINE 圖示聯繫客服確認現貨。
-  </div>
+  <!-- 📢 動態公告區 (自動從試算表抓取) -->
+  <div class="announcement" id="announcement-box"></div>
   
-  <!-- 分類按鈕容器 -->
   <div class="category-nav" id="category-nav"></div> 
-
-  <!-- 產品卡片容器 -->
   <div class="container" id="product-container"></div>
 
   <!-- 購物車送出按鈕 -->
@@ -342,15 +180,10 @@
     🛒 已選取 <span id="cart-count">0</span> 項（點此傳送至 LINE）
   </div>
 
-  <!-- 🚀 側邊浮動按鈕 (LINE + 回到頂部) -->
+  <!-- 🚀 側邊浮動按鈕 -->
   <div class="floating-tools" id="floating-tools">
-    <!-- ⚠️ 請將下方的 href 換成你自己的 LINE 加好友連結 -->
-    <a href="https://line.me/ti/p/lo_0PkVlhX" target="_blank" class="tool-btn line-btn" title="加 LINE 好友">
-      💬
-    </a>
-    <div class="tool-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="回到頂部">
-      ⬆️
-    </div>
+    <a href="#" target="_blank" class="tool-btn line-btn" id="line-link-btn" title="加 LINE 好友">💬</a>
+    <div class="tool-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="回到頂部">⬆️</div>
   </div>
 
   <script>
@@ -363,34 +196,33 @@
     function getEmbedUrl(url) {
       if (!url) return '';
       let videoId = '';
-      if (url.includes('v=')) {
-        videoId = url.split('v=')[1].split('&')[0];
-      } else if (url.includes('youtu.be/')) {
-        videoId = url.split('youtu.be/')[1].split('?')[0];
-      }
+      if (url.includes('v=')) { videoId = url.split('v=')[1].split('&')[0]; } 
+      else if (url.includes('youtu.be/')) { videoId = url.split('youtu.be/')[1].split('?')[0]; }
       return `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
     }
 
     async function loadProducts() {
-      const cachedData = localStorage.getItem('fong_products_cache');
+      // 升級快取名稱，避免舊資料干擾新架構
+      const cachedData = localStorage.getItem('fong_cache_v2');
       if (cachedData) {
         try {
-          products = JSON.parse(cachedData);
+          const parsed = JSON.parse(cachedData);
+          products = parsed.products;
+          updateSettingsUI(parsed.settings);
           document.getElementById('loading').style.display = 'none';
           renderCategories();
           renderProducts();
-        } catch (e) {
-          console.error('快取解析失敗', e);
-        }
+        } catch (e) { console.error('快取解析失敗', e); }
       }
 
       try {
         const cacheBuster = (GAS_API_URL.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
         const response = await fetch(GAS_API_URL + cacheBuster, { cache: 'no-store' });
-        const data = await response.json();
+        const data = await response.json(); 
+        // 取得的資料結構現在包含 data.products 與 data.settings
         
         const freshProducts = [];
-        data.forEach(item => {
+        data.products.forEach(item => {
           if (!item['商品名稱']) return;
           freshProducts.push({
             title: item['商品名稱'] || '',
@@ -403,10 +235,13 @@
           });
         });
 
-        const freshDataStr = JSON.stringify(freshProducts);
+        const freshData = { products: freshProducts, settings: data.settings };
+        const freshDataStr = JSON.stringify(freshData);
+        
         if (freshDataStr !== cachedData) {
-          localStorage.setItem('fong_products_cache', freshDataStr);
+          localStorage.setItem('fong_cache_v2', freshDataStr);
           products = freshProducts;
+          updateSettingsUI(data.settings);
           document.getElementById('loading').style.display = 'none';
           renderCategories();
           renderProducts();
@@ -416,6 +251,23 @@
         if (!cachedData) {
           document.getElementById('loading').innerText = '商品載入失敗，請檢查網路連線。';
         }
+      }
+    }
+
+    // 更新網站設定 (公告與 LINE 連結)
+    function updateSettingsUI(settings) {
+      if (!settings) return;
+      
+      // 更新公告
+      if (settings['公告內容']) {
+        const annBox = document.getElementById('announcement-box');
+        annBox.innerHTML = settings['公告內容'];
+        annBox.style.display = 'block'; // 有資料才顯示
+      }
+      
+      // 更新側邊欄 LINE 連結
+      if (settings['LINE連結']) {
+        document.getElementById('line-link-btn').href = settings['LINE連結'];
       }
     }
 
@@ -439,13 +291,8 @@
 
       products.forEach((item, index) => {
         const statusStr = (item.status || '').toString().trim().toUpperCase();
-        if (statusStr === 'N' || statusStr === '下架') {
-          return;
-        }
-
-        if (currentCategory !== '全部' && item.category !== currentCategory) {
-          return;
-        }
+        if (statusStr === 'N' || statusStr === '下架') return;
+        if (currentCategory !== '全部' && item.category !== currentCategory) return;
 
         const embedUrl = getEmbedUrl(item.youtube);
         const card = document.createElement('div');
@@ -465,13 +312,11 @@
                 特價 <span class="special-price">NT$${item.specialPrice}</span>
               </div>
             </div>
-
             <div class="quantity-control">
               <div class="qty-btn" onclick="changeQty(${index}, -1)">-</div>
               <span class="qty-number" id="qty-${index}">1</span>
               <div class="qty-btn" onclick="changeQty(${index}, 1)">+</div>
             </div>
-
             <button class="add-cart-btn" id="btn-${index}" onclick="toggleSelect('${item.title}', ${index})">
               ＋ 加入購買清單
             </button>
@@ -479,7 +324,6 @@
         `;
         container.appendChild(card);
       });
-      
       syncCartButtons();
     }
 
@@ -488,12 +332,10 @@
         const btn = document.getElementById(`btn-${index}`);
         if (btn) {
           if (selectedItems[item.title]) {
-            btn.innerText = '✓ 已加入清單';
-            btn.classList.add('selected');
+            btn.innerText = '✓ 已加入清單'; btn.classList.add('selected');
             document.getElementById(`qty-${index}`).innerText = selectedItems[item.title];
           } else {
-            btn.innerText = '＋ 加入購買清單';
-            btn.classList.remove('selected');
+            btn.innerText = '＋ 加入購買清單'; btn.classList.remove('selected');
             document.getElementById(`qty-${index}`).innerText = 1;
           }
         }
@@ -511,7 +353,6 @@
           }
         }
       });
-
       const mediaBox = document.getElementById(`media-${index}`);
       const iframe = document.getElementById(`iframe-${index}`);
       mediaBox.classList.add('playing');
@@ -527,27 +368,20 @@
       currentQty += delta;
       if (currentQty < 1) currentQty = 1;
       qtySpan.innerText = currentQty;
-
       const title = products[index].title;
-      if (selectedItems[title]) {
-        selectedItems[title] = currentQty;
-      }
+      if (selectedItems[title]) selectedItems[title] = currentQty;
     }
 
     function toggleSelect(title, index) {
       const btn = document.getElementById(`btn-${index}`);
       const currentQty = parseInt(document.getElementById(`qty-${index}`).innerText);
-      
       if (selectedItems[title]) {
         delete selectedItems[title];
-        btn.innerText = '＋ 加入購買清單';
-        btn.classList.remove('selected');
+        btn.innerText = '＋ 加入購買清單'; btn.classList.remove('selected');
       } else {
         selectedItems[title] = currentQty;
-        btn.innerText = '✓ 已加入清單';
-        btn.classList.add('selected');
+        btn.innerText = '✓ 已加入清單'; btn.classList.add('selected');
       }
-      
       updateCartUI();
     }
 
@@ -555,20 +389,15 @@
       const count = Object.keys(selectedItems).length;
       const cartBtn = document.getElementById('floating-cart');
       const countSpan = document.getElementById('cart-count');
-
       countSpan.innerText = count;
       cartBtn.style.display = count > 0 ? 'block' : 'none';
     }
 
     function sendToLine() {
       if (Object.keys(selectedItems).length === 0) return;
-
       let message = "你好！我想購買以下煙火商品：\n------------------------\n";
-      for (let title in selectedItems) {
-        message += `• ${title} x ${selectedItems[title]}\n`;
-      }
+      for (let title in selectedItems) { message += `• ${title} x ${selectedItems[title]}\n`; }
       message += "------------------------\n請問目前都有現貨嗎？";
-
       const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(message)}`;
       window.location.href = lineUrl;
     }
@@ -577,16 +406,13 @@
     window.addEventListener('scroll', () => {
       const tools = document.getElementById('floating-tools');
       if (window.scrollY > 200) {
-        tools.style.opacity = '1';
-        tools.style.pointerEvents = 'auto';
+        tools.style.opacity = '1'; tools.style.pointerEvents = 'auto';
       } else {
-        tools.style.opacity = '0';
-        tools.style.pointerEvents = 'none';
+        tools.style.opacity = '0'; tools.style.pointerEvents = 'none';
       }
     });
 
     loadProducts();
   </script>
-
 </body>
 </html>
