@@ -19,9 +19,49 @@
       margin: 0;
       padding: 20px 20px 80px 20px;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
+      align-items: center;
     }
 
+    /* 分類導覽列樣式 */
+    .category-nav {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 25px;
+      overflow-x: auto;
+      padding-bottom: 5px;
+      max-width: 1000px;
+      width: 100%;
+      /* 隱藏捲軸但可滑動 */
+      scrollbar-width: none; 
+    }
+    .category-nav::-webkit-scrollbar {
+      display: none; 
+    }
+
+    .cat-btn {
+      padding: 10px 20px;
+      background-color: #333;
+      color: #fff;
+      border: 1px solid #555;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 1rem;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .cat-btn:hover {
+      background-color: #444;
+    }
+
+    .cat-btn.active {
+      background-color: #ff4d4d;
+      border-color: #ff4d4d;
+      font-weight: bold;
+    }
+
+    /* 商品列表容器 */
     .container {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -224,12 +264,18 @@
       font-size: 1.2rem;
       color: #666;
       padding: 50px;
+      width: 100%;
     }
   </style>
 </head>
 <body>
 
   <div id="loading">載入商品目錄中...</div>
+  
+  <!-- 分類按鈕容器 -->
+  <div class="category-nav" id="category-nav"></div> 
+
+  <!-- 產品卡片容器 -->
   <div class="container" id="product-container"></div>
 
   <div class="floating-cart" id="floating-cart" onclick="sendToLine()">
@@ -241,7 +287,9 @@
 
     let products = [];
     const selectedItems = {};
+    let currentCategory = '全部'; // 預設顯示全部
 
+    // 處理 YouTube 影片網址
     function getEmbedUrl(url) {
       if (!url) return '';
       let videoId = '';
@@ -253,20 +301,22 @@
       return `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
     }
 
+    // 載入商品資料（含 SWR 快取機制）
     async function loadProducts() {
-      // ⚡ 步驟 1：嘗試從 localStorage 讀取快取（極速秒開）
+      // 步驟 1：嘗試從 localStorage 讀取快取（極速秒開）
       const cachedData = localStorage.getItem('fong_products_cache');
       if (cachedData) {
         try {
           products = JSON.parse(cachedData);
           document.getElementById('loading').style.display = 'none';
+          renderCategories();
           renderProducts();
         } catch (e) {
           console.error('快取解析失敗', e);
         }
       }
 
-      // ⚡ 步驟 2：背景發送 API 請求最新資料（保持即時同步）
+      // 步驟 2：背景發送 API 請求最新資料
       try {
         const cacheBuster = (GAS_API_URL.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
         const response = await fetch(GAS_API_URL + cacheBuster, { cache: 'no-store' });
@@ -281,35 +331,61 @@
             youtube: item['影片網址'] || '',
             originalPrice: item['原價'] || '',
             specialPrice: item['特價'] || '',
-            status: item['狀態'] || ''
+            status: item['狀態'] || '',
+            category: item['分類'] || '其他' // 讀取分類欄位，空白則預設為"其他"
           });
         });
 
         // 比對資料是否有變更
         const freshDataStr = JSON.stringify(freshProducts);
         if (freshDataStr !== cachedData) {
-          // 有新資料：寫入快取並重新渲染畫面
           localStorage.setItem('fong_products_cache', freshDataStr);
           products = freshProducts;
           document.getElementById('loading').style.display = 'none';
+          renderCategories();
           renderProducts();
         }
       } catch (error) {
         console.error('背景同步失敗:', error);
-        // 若完全沒暫存又失敗才顯示提示
         if (!cachedData) {
           document.getElementById('loading').innerText = '商品載入失敗，請檢查網路連線。';
         }
       }
     }
 
+    // 渲染分類導覽列
+    function renderCategories() {
+      const nav = document.getElementById('category-nav');
+      
+      // 篩選出不重複的分類名稱，並加上「全部」
+      const uniqueCategories = ['全部', ...new Set(products.map(p => p.category))];
+
+      nav.innerHTML = uniqueCategories.map(cat => 
+        `<button class="cat-btn ${cat === currentCategory ? 'active' : ''}" onclick="setCategory('${cat}')">${cat}</button>`
+      ).join('');
+    }
+
+    // 點擊分類按鈕
+    function setCategory(cat) {
+      currentCategory = cat;
+      renderCategories(); // 更新按鈕樣式
+      renderProducts();   // 重新渲染商品
+    }
+
+    // 渲染商品卡片
     function renderProducts() {
       const container = document.getElementById('product-container');
       container.innerHTML = '';
 
       products.forEach((item, index) => {
+        // 狀態為 N 或 下架 則不顯示
         const statusStr = (item.status || '').toString().trim().toUpperCase();
         if (statusStr === 'N' || statusStr === '下架') {
+          return;
+        }
+
+        // 分類過濾
+        if (currentCategory !== '全部' && item.category !== currentCategory) {
           return;
         }
 
@@ -345,9 +421,43 @@
         `;
         container.appendChild(card);
       });
+      
+      // 確保切換分類後，購物車已選取的按鈕狀態是正確的
+      syncCartButtons();
     }
 
+    // 同步按鈕狀態（切換分類重新渲染後，保留已加入購物車的按鈕樣式）
+    function syncCartButtons() {
+      products.forEach((item, index) => {
+        const btn = document.getElementById(`btn-${index}`);
+        if (btn) {
+          if (selectedItems[item.title]) {
+            btn.innerText = '✓ 已加入清單';
+            btn.classList.add('selected');
+            // 同步數量
+            document.getElementById(`qty-${index}`).innerText = selectedItems[item.title];
+          } else {
+            btn.innerText = '＋ 加入購買清單';
+            btn.classList.remove('selected');
+            document.getElementById(`qty-${index}`).innerText = 1;
+          }
+        }
+      });
+    }
+
+    // 播放影片（自動關閉其他影片）
     function playVideo(index) {
+      products.forEach((_, i) => {
+        if (i !== index) {
+          const otherMediaBox = document.getElementById(`media-${i}`);
+          const otherIframe = document.getElementById(`iframe-${i}`);
+          if (otherMediaBox && otherMediaBox.classList.contains('playing')) {
+            otherMediaBox.classList.remove('playing');
+            otherIframe.src = otherIframe.src.replace('&autoplay=1', '').replace('?autoplay=1', '');
+          }
+        }
+      });
+
       const mediaBox = document.getElementById(`media-${index}`);
       const iframe = document.getElementById(`iframe-${index}`);
       mediaBox.classList.add('playing');
@@ -357,6 +467,7 @@
       }
     }
 
+    // 增減數量
     function changeQty(index, delta) {
       const qtySpan = document.getElementById(`qty-${index}`);
       let currentQty = parseInt(qtySpan.innerText);
@@ -365,11 +476,13 @@
       qtySpan.innerText = currentQty;
 
       const title = products[index].title;
+      // 如果已經加入購物車，同步更新裡面的數量
       if (selectedItems[title]) {
         selectedItems[title] = currentQty;
       }
     }
 
+    // 加入/取消 購買清單
     function toggleSelect(title, index) {
       const btn = document.getElementById(`btn-${index}`);
       const currentQty = parseInt(document.getElementById(`qty-${index}`).innerText);
@@ -387,6 +500,7 @@
       updateCartUI();
     }
 
+    // 更新浮動購物車介面
     function updateCartUI() {
       const count = Object.keys(selectedItems).length;
       const cartBtn = document.getElementById('floating-cart');
@@ -396,6 +510,7 @@
       cartBtn.style.display = count > 0 ? 'block' : 'none';
     }
 
+    // 傳送訂單至 LINE
     function sendToLine() {
       if (Object.keys(selectedItems).length === 0) return;
 
@@ -409,6 +524,7 @@
       window.location.href = lineUrl;
     }
 
+    // 初始化啟動
     loadProducts();
   </script>
 
