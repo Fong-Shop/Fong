@@ -23,6 +23,21 @@
       align-items: center;
     }
 
+    /* 📢 公告區樣式 */
+    .announcement {
+      width: 100%;
+      max-width: 1000px;
+      background-color: #fff3cd; 
+      color: #856404;
+      padding: 12px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border-left: 5px solid #ffc107;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
     /* 分類導覽列樣式 */
     .category-nav {
       display: flex;
@@ -259,6 +274,45 @@
       transform: scale(1.05);
     }
 
+    /* 🚀 側邊浮動按鈕群 (回到頂部 + LINE客服) */
+    .floating-tools {
+      position: fixed;
+      bottom: 80px; 
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 999;
+      opacity: 0; /* 預設隱藏，滑動後才出現 */
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .tool-btn {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      background-color: #333;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      transition: all 0.2s;
+      text-decoration: none;
+      font-size: 1.2rem;
+    }
+
+    .tool-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .tool-btn.line-btn {
+      background-color: #00c300; 
+      font-size: 1.5rem;
+    }
+
     #loading {
       text-align: center;
       font-size: 1.2rem;
@@ -271,6 +325,11 @@
 <body>
 
   <div id="loading">載入商品目錄中...</div>
+
+  <!-- 📢 公告區 (文字可以隨時修改) -->
+  <div class="announcement">
+    📢 <strong>最新公告：</strong> 歡迎光臨 FONG 煙火精選目錄！目前中秋商品陸續上架中，庫存變動快，大量訂購請直接點擊右下方 LINE 圖示聯繫客服確認現貨。
+  </div>
   
   <!-- 分類按鈕容器 -->
   <div class="category-nav" id="category-nav"></div> 
@@ -278,8 +337,20 @@
   <!-- 產品卡片容器 -->
   <div class="container" id="product-container"></div>
 
+  <!-- 購物車送出按鈕 -->
   <div class="floating-cart" id="floating-cart" onclick="sendToLine()">
-    🛒 已選取 <span id="cart-count">0</span> 項（點此傳送至 LINE 訂購）
+    🛒 已選取 <span id="cart-count">0</span> 項（點此傳送至 LINE）
+  </div>
+
+  <!-- 🚀 側邊浮動按鈕 (LINE + 回到頂部) -->
+  <div class="floating-tools" id="floating-tools">
+    <!-- ⚠️ 請將下方的 href 換成你自己的 LINE 加好友連結 -->
+    <a href="https://line.me/ti/p/YOUR_LINE_ID" target="_blank" class="tool-btn line-btn" title="加 LINE 好友">
+      💬
+    </a>
+    <div class="tool-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="回到頂部">
+      ⬆️
+    </div>
   </div>
 
   <script>
@@ -287,9 +358,8 @@
 
     let products = [];
     const selectedItems = {};
-    let currentCategory = '全部'; // 預設顯示全部
+    let currentCategory = '全部'; 
 
-    // 處理 YouTube 影片網址
     function getEmbedUrl(url) {
       if (!url) return '';
       let videoId = '';
@@ -301,9 +371,7 @@
       return `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
     }
 
-    // 載入商品資料（含 SWR 快取機制）
     async function loadProducts() {
-      // 步驟 1：嘗試從 localStorage 讀取快取（極速秒開）
       const cachedData = localStorage.getItem('fong_products_cache');
       if (cachedData) {
         try {
@@ -316,7 +384,6 @@
         }
       }
 
-      // 步驟 2：背景發送 API 請求最新資料
       try {
         const cacheBuster = (GAS_API_URL.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
         const response = await fetch(GAS_API_URL + cacheBuster, { cache: 'no-store' });
@@ -332,11 +399,10 @@
             originalPrice: item['原價'] || '',
             specialPrice: item['特價'] || '',
             status: item['狀態'] || '',
-            category: item['分類'] || '其他' // 讀取分類欄位，空白則預設為"其他"
+            category: item['分類'] || '其他' 
           });
         });
 
-        // 比對資料是否有變更
         const freshDataStr = JSON.stringify(freshProducts);
         if (freshDataStr !== cachedData) {
           localStorage.setItem('fong_products_cache', freshDataStr);
@@ -353,38 +419,30 @@
       }
     }
 
-    // 渲染分類導覽列
     function renderCategories() {
       const nav = document.getElementById('category-nav');
-      
-      // 篩選出不重複的分類名稱，並加上「全部」
       const uniqueCategories = ['全部', ...new Set(products.map(p => p.category))];
-
       nav.innerHTML = uniqueCategories.map(cat => 
         `<button class="cat-btn ${cat === currentCategory ? 'active' : ''}" onclick="setCategory('${cat}')">${cat}</button>`
       ).join('');
     }
 
-    // 點擊分類按鈕
     function setCategory(cat) {
       currentCategory = cat;
-      renderCategories(); // 更新按鈕樣式
-      renderProducts();   // 重新渲染商品
+      renderCategories(); 
+      renderProducts();   
     }
 
-    // 渲染商品卡片
     function renderProducts() {
       const container = document.getElementById('product-container');
       container.innerHTML = '';
 
       products.forEach((item, index) => {
-        // 狀態為 N 或 下架 則不顯示
         const statusStr = (item.status || '').toString().trim().toUpperCase();
         if (statusStr === 'N' || statusStr === '下架') {
           return;
         }
 
-        // 分類過濾
         if (currentCategory !== '全部' && item.category !== currentCategory) {
           return;
         }
@@ -422,11 +480,9 @@
         container.appendChild(card);
       });
       
-      // 確保切換分類後，購物車已選取的按鈕狀態是正確的
       syncCartButtons();
     }
 
-    // 同步按鈕狀態（切換分類重新渲染後，保留已加入購物車的按鈕樣式）
     function syncCartButtons() {
       products.forEach((item, index) => {
         const btn = document.getElementById(`btn-${index}`);
@@ -434,7 +490,6 @@
           if (selectedItems[item.title]) {
             btn.innerText = '✓ 已加入清單';
             btn.classList.add('selected');
-            // 同步數量
             document.getElementById(`qty-${index}`).innerText = selectedItems[item.title];
           } else {
             btn.innerText = '＋ 加入購買清單';
@@ -445,7 +500,6 @@
       });
     }
 
-    // 播放影片（自動關閉其他影片）
     function playVideo(index) {
       products.forEach((_, i) => {
         if (i !== index) {
@@ -467,7 +521,6 @@
       }
     }
 
-    // 增減數量
     function changeQty(index, delta) {
       const qtySpan = document.getElementById(`qty-${index}`);
       let currentQty = parseInt(qtySpan.innerText);
@@ -476,13 +529,11 @@
       qtySpan.innerText = currentQty;
 
       const title = products[index].title;
-      // 如果已經加入購物車，同步更新裡面的數量
       if (selectedItems[title]) {
         selectedItems[title] = currentQty;
       }
     }
 
-    // 加入/取消 購買清單
     function toggleSelect(title, index) {
       const btn = document.getElementById(`btn-${index}`);
       const currentQty = parseInt(document.getElementById(`qty-${index}`).innerText);
@@ -500,7 +551,6 @@
       updateCartUI();
     }
 
-    // 更新浮動購物車介面
     function updateCartUI() {
       const count = Object.keys(selectedItems).length;
       const cartBtn = document.getElementById('floating-cart');
@@ -510,7 +560,6 @@
       cartBtn.style.display = count > 0 ? 'block' : 'none';
     }
 
-    // 傳送訂單至 LINE
     function sendToLine() {
       if (Object.keys(selectedItems).length === 0) return;
 
@@ -524,10 +573,20 @@
       window.location.href = lineUrl;
     }
 
-    // 初始化啟動
+    // 監聽滾動事件，控制浮動按鈕顯示與隱藏
+    window.addEventListener('scroll', () => {
+      const tools = document.getElementById('floating-tools');
+      if (window.scrollY > 200) {
+        tools.style.opacity = '1';
+        tools.style.pointerEvents = 'auto';
+      } else {
+        tools.style.opacity = '0';
+        tools.style.pointerEvents = 'none';
+      }
+    });
+
     loadProducts();
   </script>
 
 </body>
 </html>
-
