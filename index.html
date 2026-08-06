@@ -25,83 +25,43 @@
 
     /* 📢 公告區樣式 */
     .announcement {
-      width: 100%;
-      max-width: 1000px;
-      background-color: #fff3cd; 
-      color: #856404;
-      padding: 12px 20px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      border-left: 5px solid #ffc107;
-      font-size: 0.95rem;
-      line-height: 1.5;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-      display: none; /* 預設隱藏，有抓到資料才顯示 */
+      width: 100%; max-width: 1000px; background-color: #fff3cd; 
+      color: #856404; padding: 12px 20px; border-radius: 8px;
+      margin-bottom: 20px; border-left: 5px solid #ffc107;
+      font-size: 0.95rem; line-height: 1.5;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: none; 
     }
 
+    /* 分類導覽列樣式 */
     .category-nav {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 25px;
-      overflow-x: auto;
-      padding-bottom: 5px;
-      max-width: 1000px;
-      width: 100%;
+      display: flex; gap: 12px; margin-bottom: 25px; overflow-x: auto;
+      padding-bottom: 5px; max-width: 1000px; width: 100%;
       scrollbar-width: none; 
     }
     .category-nav::-webkit-scrollbar { display: none; }
-
     .cat-btn {
-      padding: 10px 20px;
-      background-color: #333;
-      color: #fff;
-      border: 1px solid #555;
-      border-radius: 25px;
-      cursor: pointer;
-      font-size: 1rem;
-      white-space: nowrap;
-      transition: all 0.2s;
+      padding: 10px 20px; background-color: #333; color: #fff;
+      border: 1px solid #555; border-radius: 25px; cursor: pointer;
+      font-size: 1rem; white-space: nowrap; transition: all 0.2s;
     }
     .cat-btn:hover { background-color: #444; }
-    .cat-btn.active {
-      background-color: #ff4d4d;
-      border-color: #ff4d4d;
-      font-weight: bold;
-    }
+    .cat-btn.active { background-color: #ff4d4d; border-color: #ff4d4d; font-weight: bold; }
 
+    /* 商品列表容器 */
     .container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
-      max-width: 1000px;
-      width: 100%;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px; max-width: 1000px; width: 100%;
     }
-
     .product-card {
-      background-color: #000;
-      color: #fff;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-      border: 2px solid #000;
-      display: flex;
-      flex-direction: column;
+      background-color: #000; color: #fff; border-radius: 12px; overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); border: 2px solid #000;
+      display: flex; flex-direction: column; transition: box-shadow 0.3s ease;
     }
 
-    .media-container {
-      position: relative;
-      width: 100%;
-      height: 220px;
-      cursor: pointer;
-      background-color: #222;
-    }
+    .media-container { position: relative; width: 100%; height: 220px; cursor: pointer; background-color: #222; }
     .media-container img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      position: absolute;
-      top: 0; left: 0; z-index: 10;
-      transition: opacity 0.3s;
+      width: 100%; height: 100%; object-fit: cover; position: absolute;
+      top: 0; left: 0; z-index: 10; transition: opacity 0.3s;
     }
     .play-button {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -163,24 +123,76 @@
     .tool-btn.line-btn { background-color: #00c300; font-size: 1.5rem; }
 
     #loading { text-align: center; font-size: 1.2rem; color: #666; padding: 50px; width: 100%; }
+
+    /* 🎁 動態多格彈出廣告視窗樣式 */
+    .popup-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      z-index: 2000; display: none; justify-content: center; align-items: center;
+      padding: 20px; backdrop-filter: blur(3px);
+    }
+    .popup-content {
+      position: relative; max-width: 600px; width: 100%;
+      background: #1a1a1a; border-radius: 12px; border: 2px solid #ff4d4d;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); padding: 25px 20px;
+      animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      text-align: center;
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .popup-close {
+      position: absolute; top: -15px; right: -15px;
+      width: 36px; height: 36px; background-color: #fff; color: #000;
+      border-radius: 50%; display: flex; justify-content: center; align-items: center;
+      font-size: 1.2rem; font-weight: bold; cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3); z-index: 2010; transition: transform 0.2s;
+    }
+    .popup-close:hover { transform: scale(1.15) rotate(90deg); }
+    .popup-title {
+      font-size: 1.4rem; font-weight: bold; color: #ffcc00; margin-bottom: 20px;
+    }
+    .popup-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 15px;
+    }
+    .popup-item {
+      background: #000; border-radius: 8px; padding: 10px; cursor: pointer;
+      border: 2px solid transparent; transition: all 0.2s;
+    }
+    .popup-item:hover { border-color: #ff4d4d; transform: scale(1.05); }
+    .popup-item img {
+      width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 6px;
+    }
+    .popup-item-title {
+      color: #fff; font-size: 0.95rem; font-weight: bold; margin-top: 8px;
+    }
   </style>
 </head>
 <body>
 
+  <!-- 🎁 動態多格彈出廣告視窗 -->
+  <div class="popup-overlay" id="popup-overlay">
+    <div class="popup-content">
+      <div class="popup-close" onclick="closePopup()">✖</div>
+      <div class="popup-title">🔥 優惠主打推薦</div>
+      <div class="popup-grid" id="popup-grid">
+        <!-- 這裡會自動生成主打商品 -->
+      </div>
+    </div>
+  </div>
+
   <div id="loading">載入商品目錄中...</div>
 
-  <!-- 📢 動態公告區 (自動從試算表抓取) -->
   <div class="announcement" id="announcement-box"></div>
-  
   <div class="category-nav" id="category-nav"></div> 
   <div class="container" id="product-container"></div>
 
-  <!-- 購物車送出按鈕 -->
   <div class="floating-cart" id="floating-cart" onclick="sendToLine()">
     🛒 已選取 <span id="cart-count">0</span> 項（點此傳送至 LINE）
   </div>
 
-  <!-- 🚀 側邊浮動按鈕 -->
   <div class="floating-tools" id="floating-tools">
     <a href="#" target="_blank" class="tool-btn line-btn" id="line-link-btn" title="加 LINE 好友">💬</a>
     <div class="tool-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="回到頂部">⬆️</div>
@@ -192,6 +204,7 @@
     let products = [];
     const selectedItems = {};
     let currentCategory = '全部'; 
+    let hasShownAdThisLoad = false; 
 
     function getEmbedUrl(url) {
       if (!url) return '';
@@ -202,8 +215,7 @@
     }
 
     async function loadProducts() {
-      // 升級快取名稱，避免舊資料干擾新架構
-      const cachedData = localStorage.getItem('fong_cache_v2');
+      const cachedData = localStorage.getItem('fong_cache_v3');
       if (cachedData) {
         try {
           const parsed = JSON.parse(cachedData);
@@ -219,7 +231,6 @@
         const cacheBuster = (GAS_API_URL.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
         const response = await fetch(GAS_API_URL + cacheBuster, { cache: 'no-store' });
         const data = await response.json(); 
-        // 取得的資料結構現在包含 data.products 與 data.settings
         
         const freshProducts = [];
         data.products.forEach(item => {
@@ -239,7 +250,7 @@
         const freshDataStr = JSON.stringify(freshData);
         
         if (freshDataStr !== cachedData) {
-          localStorage.setItem('fong_cache_v2', freshDataStr);
+          localStorage.setItem('fong_cache_v3', freshDataStr);
           products = freshProducts;
           updateSettingsUI(data.settings);
           document.getElementById('loading').style.display = 'none';
@@ -254,20 +265,80 @@
       }
     }
 
-    // 更新網站設定 (公告與 LINE 連結)
+    // 更新網站設定 (公告、LINE、智慧抓取主打商品)
     function updateSettingsUI(settings) {
       if (!settings) return;
       
-      // 更新公告
       if (settings['公告內容']) {
         const annBox = document.getElementById('announcement-box');
         annBox.innerHTML = settings['公告內容'];
-        annBox.style.display = 'block'; // 有資料才顯示
+        annBox.style.display = 'block';
       }
       
-      // 更新側邊欄 LINE 連結
       if (settings['LINE連結']) {
         document.getElementById('line-link-btn').href = settings['LINE連結'];
+      }
+
+      // 💡 智慧生成多格彈出廣告
+      if (settings['主打商品'] && !hasShownAdThisLoad) {
+        // 支援用半形、全形逗號或頓號來分割多個商品名稱
+        const targetTitles = settings['主打商品'].split(/[,，、]/).map(s => s.trim()).filter(s => s);
+        const featuredProducts = [];
+
+        // 去目錄裡尋找對應的商品資料與圖片
+        targetTitles.forEach(title => {
+          const index = products.findIndex(p => p.title === title);
+          if (index !== -1) {
+            featuredProducts.push({ index, product: products[index] });
+          }
+        });
+
+        // 如果有找到對應的商品，就生成網格廣告並顯示
+        if (featuredProducts.length > 0) {
+          const popupGrid = document.getElementById('popup-grid');
+          popupGrid.innerHTML = featuredProducts.map(fp => `
+            <div class="popup-item" onclick="handleAdClick('${fp.product.title}')">
+              <img src="${fp.product.image}" alt="${fp.product.title}" onerror="this.src='https://via.placeholder.com/150?text=無圖片';">
+              <div class="popup-item-title">${fp.product.title}</div>
+            </div>
+          `).join('');
+          
+          document.getElementById('popup-overlay').style.display = 'flex';
+          hasShownAdThisLoad = true;
+        }
+      }
+    }
+
+    function closePopup() {
+      document.getElementById('popup-overlay').style.display = 'none';
+    }
+
+    function handleAdClick(targetTitle) {
+      closePopup(); 
+      if (!targetTitle) return; 
+
+      const targetIndex = products.findIndex(p => p.title === targetTitle);
+      if (targetIndex !== -1) {
+        const p = products[targetIndex];
+        
+        if (currentCategory !== '全部' && p.category !== currentCategory) {
+          setCategory(p.category); 
+        }
+
+        setTimeout(() => {
+          const cardBtn = document.getElementById(`btn-${targetIndex}`);
+          if (cardBtn) {
+            cardBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            const cardElement = cardBtn.closest('.product-card');
+            cardElement.style.boxShadow = '0 0 25px #ff4d4d';
+            setTimeout(() => cardElement.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.15)', 2000);
+
+            if (!selectedItems[targetTitle]) {
+              toggleSelect(targetTitle, targetIndex);
+            }
+          }
+        }, 150);
       }
     }
 
@@ -297,6 +368,7 @@
         const embedUrl = getEmbedUrl(item.youtube);
         const card = document.createElement('div');
         card.className = 'product-card';
+        card.id = `card-${index}`;
         
         card.innerHTML = `
           <div class="media-container" id="media-${index}" onclick="playVideo(${index})">
@@ -342,20 +414,12 @@
       });
     }
 
+    // 🌟 YouTube 復原：移除排他邏輯，點了就播，互不干涉
     function playVideo(index) {
-      products.forEach((_, i) => {
-        if (i !== index) {
-          const otherMediaBox = document.getElementById(`media-${i}`);
-          const otherIframe = document.getElementById(`iframe-${i}`);
-          if (otherMediaBox && otherMediaBox.classList.contains('playing')) {
-            otherMediaBox.classList.remove('playing');
-            otherIframe.src = otherIframe.src.replace('&autoplay=1', '').replace('?autoplay=1', '');
-          }
-        }
-      });
       const mediaBox = document.getElementById(`media-${index}`);
       const iframe = document.getElementById(`iframe-${index}`);
       mediaBox.classList.add('playing');
+      
       let currentSrc = iframe.src;
       if (!currentSrc.includes('autoplay=1')) {
         iframe.src = currentSrc + (currentSrc.includes('?') ? '&' : '?') + 'autoplay=1';
@@ -402,7 +466,6 @@
       window.location.href = lineUrl;
     }
 
-    // 監聽滾動事件，控制浮動按鈕顯示與隱藏
     window.addEventListener('scroll', () => {
       const tools = document.getElementById('floating-tools');
       if (window.scrollY > 200) {
