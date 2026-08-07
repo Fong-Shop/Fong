@@ -215,7 +215,6 @@
     const selectedItems = {}; 
     let currentCategory = '全部'; 
     let hasShownAdThisLoad = false; 
-    let lineProfileUrl = '';
 
     function getEmbedUrl(url) {
       if (!url) return '';
@@ -299,8 +298,7 @@
         annBox.innerHTML = settings['公告內容']; annBox.style.display = 'block';
       }
       if (settings['LINE連結']) {
-        lineProfileUrl = settings['LINE連結'];
-        document.getElementById('line-link-btn').href = lineProfileUrl;
+        document.getElementById('line-link-btn').href = settings['LINE連結'];
       }
       if (settings['主打商品'] && !hasShownAdThisLoad) {
         const targetTitles = settings['主打商品'].split(/[,，、]/).map(s => s.trim()).filter(s => s);
@@ -511,7 +509,7 @@
       if (Object.keys(selectedItems).length === 0) { closeCartModal(); } else { openCartModal(); }
     }
 
-    // 🚀 傳送機制：改回使用 LINE 分享連結模式
+    // 🚀 傳送至 LINE：恢復原本的文字分享機制
     function confirmSendToLine() {
       if (Object.keys(selectedItems).length === 0) return;
       
@@ -531,6 +529,7 @@
       message += `💰 預估總金額：NT$${totalPrice}\n\n`;
       message += "請問目前都有現貨嗎？";
       
+      // 使用 LINE 分享文字 API，會跳出選擇好友的畫面
       const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(message)}`;
       window.location.href = lineUrl;
     }
