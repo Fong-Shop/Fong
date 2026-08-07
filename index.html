@@ -215,7 +215,7 @@
     const selectedItems = {}; 
     let currentCategory = '全部'; 
     let hasShownAdThisLoad = false; 
-    let lineProfileUrl = ''; // 全域變數：儲存後台設定的 LINE 連結
+    let lineProfileUrl = '';
 
     function getEmbedUrl(url) {
       if (!url) return '';
@@ -511,13 +511,9 @@
       if (Object.keys(selectedItems).length === 0) { closeCartModal(); } else { openCartModal(); }
     }
 
-    // 🚀 全新傳送機制：自動複製 + 跳轉對話框
+    // 🚀 傳送機制：改回使用 LINE 分享連結模式
     function confirmSendToLine() {
       if (Object.keys(selectedItems).length === 0) return;
-      if (!lineProfileUrl) {
-        alert("請先在試算表【設定】分頁設定 LINE 連結！");
-        return;
-      }
       
       let totalPrice = 0;
       let message = "你好！我想購買以下煙火商品：\n------------------------\n";
@@ -526,6 +522,7 @@
         const qty = selectedItems[title];
         const product = products.find(p => p.title === title);
         let price = product ? (parseInt(product.specialPrice) || parseInt(product.originalPrice) || 0) : 0;
+        
         totalPrice += price * qty;
         message += `• ${title} x ${qty}\n`; 
       }
@@ -534,15 +531,8 @@
       message += `💰 預估總金額：NT$${totalPrice}\n\n`;
       message += "請問目前都有現貨嗎？";
       
-      // 自動複製文字到剪貼簿，然後跳轉到你的個人 LINE 頁面
-      navigator.clipboard.writeText(message).then(() => {
-        alert("✅ 訂單內容已自動複製！\n\n即將為您打開 LINE，請直接在對話框「貼上」並送出即可！");
-        window.location.href = lineProfileUrl; // 直接跳轉到你的帳號
-      }).catch(err => {
-        // 如果瀏覽器不支援自動複製，採用備用方案 (原本的分享模式)
-        const fallbackUrl = `https://line.me/R/msg/text/?${encodeURIComponent(message)}`;
-        window.location.href = fallbackUrl;
-      });
+      const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(message)}`;
+      window.location.href = lineUrl;
     }
 
     window.addEventListener('scroll', () => {
