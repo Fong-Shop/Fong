@@ -896,7 +896,7 @@
           if (neededForNext === threshold) {
             document.getElementById('bottom-reward-status').innerHTML = `<span style="color:#28a745; font-weight:bold;">點此挑選 ➔</span>`;
           } else {
-            document.getElementById('bottom-reward-status').innerHTML = `差 $${neededForNext} 再送點數`;
+            document.getElementById('bottom-reward-status').innerHTML = `差 $${neededForNext} 再送1點`;
           }
         } else {
           document.getElementById('bottom-reward-title').innerText = `🎁 滿額自選禮`;
@@ -1101,7 +1101,7 @@
       const custNote = document.getElementById('order-customer-note').value.trim();
       const totalPrice = calculateCartTotal();
 
-      let message = "你好！我想預訂以下煙火商品：\n------------------------\n";
+      let message = "想訂購以下商品：\n------------------------\n";
       
       for (let title in selectedItems) { 
         const qty = selectedItems[title];
@@ -1111,10 +1111,10 @@
       }
       
       message += "------------------------\n";
-      message += `💰 預估總金額：NT$${totalPrice}\n`;
+      message += `💰 總金額：NT$${totalPrice}\n`;
 
       if (Object.keys(selectedRewards).length > 0) {
-        message += "🎁 滿額自選贈品：\n";
+        message += "🎁 滿額自選禮：\n";
         for (let rName in selectedRewards) {
           message += `  - ${rName} x ${selectedRewards[rName]}\n`;
         }
