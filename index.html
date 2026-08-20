@@ -451,7 +451,7 @@
     }
 
     async function loadProducts() {
-      const cachedData = localStorage.getItem('fong_cache_v18');
+      const cachedData = localStorage.getItem('fong_cache_v19');
       if (cachedData) {
         try {
           const parsed = JSON.parse(cachedData);
@@ -517,7 +517,7 @@
             originalPrice: item['原價'] ? item['原價'] : (calcOriginalPrice > 0 ? calcOriginalPrice : ''),
             specialPrice: item['特價'] || '',
             status: item['狀態'] || '',
-            category: item['分類'] || '套裝',
+            category: item['分類'] || '超值套裝',
             packageDetail: detail,
             isPackage: true
           });
@@ -527,7 +527,7 @@
         const freshDataStr = JSON.stringify(freshData);
         
         if (freshDataStr !== cachedData) {
-          localStorage.setItem('fong_cache_v18', freshDataStr);
+          localStorage.setItem('fong_cache_v19', freshDataStr);
           products = freshProducts;
           siteSettings = data.settings || {};
           parseRewardPool(siteSettings['滿額贈品']);
@@ -545,7 +545,6 @@
       }
     }
 
-    // 💡 直覺新解析：品項*點數 (例: 一發入魂*2, 3元笛音火箭*1, 仙女棒*0.5)
     function parseRewardPool(settingStr) {
       parsedRewardPool = [];
       if (!settingStr) return;
@@ -553,7 +552,6 @@
       parts.forEach(str => {
         const match = str.match(/^(.*?)\s*[*xX]\s*(\d+(\.\d+)?)$/);
         const name = match ? match[1].trim() : str;
-        // 數字直接代表每換 1 份需要幾點
         const ptsPerUnit = match ? parseFloat(match[2]) : 1;
         parsedRewardPool.push({
           name: name,
@@ -653,9 +651,16 @@
       }
     }
 
+    // 💡 分類按鈕排序：全部 ➔ 套裝系列 ➔ 其他分類
     function renderCategories() {
       const nav = document.getElementById('category-nav');
-      const uniqueCategories = ['全部', ...new Set(products.map(p => p.category))];
+      const rawCategories = [...new Set(products.map(p => p.category))].filter(Boolean);
+      
+      const packageCats = rawCategories.filter(c => c.includes('套裝'));
+      const otherCats = rawCategories.filter(c => !c.includes('套裝'));
+      
+      const uniqueCategories = ['全部', ...packageCats, ...otherCats];
+      
       nav.innerHTML = uniqueCategories.map(cat => 
         `<button class="cat-btn ${cat === currentCategory ? 'active' : ''}" onclick="setCategory('${cat}')">${cat}</button>`
       ).join('');
