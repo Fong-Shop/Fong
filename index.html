@@ -460,6 +460,26 @@
     let currentCategory = '全部'; 
     let hasShownAdThisLoad = false; 
 
+    // 💡 智慧圖片網址解析（支援 Google Drive 分享連結、外鏈圖床與 GitHub 本地檔名）
+    function formatImageUrl(rawUrl) {
+      if (!rawUrl) return '';
+      let url = rawUrl.toString().trim();
+      
+      // 如果是 Google Drive 分享網址，自動轉為直連格式
+      if (url.includes('drive.google.com')) {
+        let fileId = '';
+        if (url.includes('/d/')) {
+          fileId = url.split('/d/')[1].split('/')[0].split('?')[0];
+        } else if (url.includes('id=')) {
+          fileId = url.split('id=')[1].split('&')[0];
+        }
+        if (fileId) {
+          return `https://drive.google.com/uc?export=view&id=${fileId}`;
+        }
+      }
+      return url;
+    }
+
     function getEmbedUrl(url) {
       if (!url) return '';
       let videoId = '';
@@ -483,7 +503,7 @@
     }
 
     async function loadProducts() {
-      const cachedData = localStorage.getItem('fong_cache_v20');
+      const cachedData = localStorage.getItem('fong_cache_v21');
       if (cachedData) {
         try {
           const parsed = JSON.parse(cachedData);
@@ -513,7 +533,7 @@
           if (!item['商品名稱']) return;
           freshProducts.push({
             title: item['商品名稱'] || '',
-            image: item['圖片檔名'] || '',
+            image: formatImageUrl(item['圖片檔名'] || ''),
             youtube: item['影片網址'] || '',
             originalPrice: item['原價'] || '',
             specialPrice: item['特價'] || '',
@@ -544,7 +564,7 @@
 
           freshProducts.push({
             title: item['商品名稱'] || '',
-            image: item['圖片檔名'] || '',
+            image: formatImageUrl(item['圖片檔名'] || ''),
             youtube: item['影片網址'] || '',
             originalPrice: item['原價'] ? item['原價'] : (calcOriginalPrice > 0 ? calcOriginalPrice : ''),
             specialPrice: item['特價'] || '',
@@ -559,7 +579,7 @@
         const freshDataStr = JSON.stringify(freshData);
         
         if (freshDataStr !== cachedData) {
-          localStorage.setItem('fong_cache_v20', freshDataStr);
+          localStorage.setItem('fong_cache_v21', freshDataStr);
           products = freshProducts;
           siteSettings = data.settings || {};
           parseRewardPool(siteSettings['滿額贈品']);
