@@ -15,7 +15,7 @@
     * { box-sizing: border-box; }
     body {
       font-family: Arial, sans-serif; background-color: #f4f4f4;
-      margin: 0; padding: 20px 20px 90px 20px;
+      margin: 0; padding: 20px 20px 100px 20px;
       display: flex; flex-direction: column; align-items: center;
     }
     .announcement {
@@ -25,16 +25,6 @@
       font-size: 0.95rem; line-height: 1.5;
       box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: none; 
     }
-
-    /* 🎁 滿額贈進度條 */
-    .reward-bar-container {
-      width: 100%; max-width: 1000px; background: #fff;
-      padding: 12px 20px; border-radius: 8px; margin-bottom: 20px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: none;
-    }
-    .reward-text { font-size: 0.95rem; font-weight: bold; color: #333; margin-bottom: 6px; display: flex; justify-content: space-between; }
-    .reward-progress-bg { width: 100%; height: 10px; background: #eee; border-radius: 5px; overflow: hidden; }
-    .reward-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ff9900, #28a745); transition: width 0.3s ease; }
 
     .category-nav {
       display: flex; gap: 12px; margin-bottom: 25px; overflow-x: auto;
@@ -80,10 +70,9 @@
     .media-container iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; z-index: 5; }
     .media-container.playing img, .media-container.playing .play-button { opacity: 0; pointer-events: none; }
 
-    .card-info { padding: 15px; text-align: center; display: flex; flex-direction: column; flex-grow: 1; justify-content: space-between; }
+    .card-info { padding: 16px; text-align: center; display: flex; flex-direction: column; flex-grow: 1; justify-content: space-between; }
     .title { font-size: 1.15rem; font-weight: bold; margin-bottom: 8px; }
     
-    /* 套裝內容清單樣式 */
     .package-items-box {
       background: #181818; border-radius: 8px; padding: 10px; margin-bottom: 12px; text-align: left;
       border: 1px solid #333;
@@ -91,7 +80,7 @@
     .package-items-title { font-size: 0.8rem; color: #888; margin-bottom: 6px; font-weight: bold; }
     .package-item-tag {
       display: inline-flex; align-items: center; justify-content: space-between; width: 100%;
-      background: #252525; padding: 5px 8px; margin-bottom: 4px; border-radius: 4px;
+      background: #252525; padding: 6px 8px; margin-bottom: 4px; border-radius: 4px;
       font-size: 0.88rem; color: #fff; cursor: pointer; border: 1px solid #3a3a3a; transition: 0.2s;
     }
     .package-item-tag:hover { border-color: #ff4d4d; background: #2f2f2f; }
@@ -120,16 +109,36 @@
     .add-cart-btn:hover { background-color: #444; }
     .add-cart-btn.selected { background-color: #28a745; color: #fff; border-color: #28a745; }
 
+    /* 🚀 底部浮動購物群組 (含滿額進度條) */
+    .floating-cart-group {
+      position: fixed; bottom: 20px; right: 20px;
+      display: flex; flex-direction: column; align-items: flex-end;
+      gap: 6px; z-index: 1000;
+    }
+
+    .floating-reward-pill {
+      background-color: rgba(20, 20, 20, 0.92);
+      color: #fff; border: 1px solid #ffcc00;
+      padding: 6px 14px; border-radius: 20px;
+      font-size: 0.8rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      display: none; align-items: center; gap: 8px; backdrop-filter: blur(4px);
+    }
+    .floating-reward-pill .mini-bar-bg {
+      width: 60px; height: 6px; background: #444; border-radius: 3px; overflow: hidden;
+    }
+    .floating-reward-pill .mini-bar-fill {
+      width: 0%; height: 100%; background: linear-gradient(90deg, #ff9900, #28a745); transition: width 0.3s ease;
+    }
+
     .floating-cart {
-      position: fixed; bottom: 20px; right: 20px; background-color: #06C755;
-      color: #fff; padding: 14px 24px; border-radius: 50px; cursor: pointer;
-      font-size: 1rem; font-weight: bold; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-      display: none; z-index: 1000; transition: transform 0.2s;
+      background-color: #06C755; color: #fff; padding: 14px 22px; border-radius: 50px;
+      cursor: pointer; font-size: 1rem; font-weight: bold; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      display: none; transition: transform 0.2s;
     }
     .floating-cart:hover { transform: scale(1.05); }
 
     .floating-tools {
-      position: fixed; bottom: 80px; right: 20px; display: flex; flex-direction: column;
+      position: fixed; bottom: 100px; right: 20px; display: flex; flex-direction: column;
       gap: 12px; z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.3s;
     }
     .tool-btn {
@@ -235,7 +244,7 @@
     </div>
   </div>
 
-  <!-- 🔍 單品詳情預覽小視窗 (點擊套裝內容時彈出) -->
+  <!-- 🔍 單品詳情預覽小視窗 -->
   <div class="popup-overlay" id="product-detail-modal" style="z-index: 2500;">
     <div class="popup-content" style="max-width: 450px; padding: 20px;">
       <div class="popup-close" onclick="closeDetailModal()">✖</div>
@@ -301,23 +310,20 @@
   <div id="loading">載入商品目錄中...</div>
 
   <div class="announcement" id="announcement-box"></div>
-
-  <!-- 滿額贈進度條 -->
-  <div class="reward-bar-container" id="reward-bar-container">
-    <div class="reward-text">
-      <span id="reward-title-text">滿額贈好禮</span>
-      <span id="reward-status-text">未達門檻</span>
-    </div>
-    <div class="reward-progress-bg">
-      <div class="reward-progress-fill" id="reward-progress-fill"></div>
-    </div>
-  </div>
-
   <div class="category-nav" id="category-nav"></div> 
   <div class="container" id="product-container"></div>
 
-  <div class="floating-cart" id="floating-cart" onclick="openCartModal()">
-    🛒 已選取 <span id="cart-count">0</span> 項（點此查看清單）
+  <!-- 🚀 浮動購物群組 (包含滿額進度膠囊條) -->
+  <div class="floating-cart-group" id="floating-cart-group">
+    <div class="floating-reward-pill" id="floating-reward-pill">
+      <span id="floating-reward-text">滿額贈</span>
+      <div class="mini-bar-bg">
+        <div class="mini-bar-fill" id="floating-reward-bar"></div>
+      </div>
+    </div>
+    <div class="floating-cart" id="floating-cart" onclick="openCartModal()">
+      🛒 已選取 <span id="cart-count">0</span> 項（NT$0）
+    </div>
   </div>
 
   <div class="floating-tools" id="floating-tools">
@@ -357,7 +363,7 @@
     }
 
     async function loadProducts() {
-      const cachedData = localStorage.getItem('fong_cache_v5');
+      const cachedData = localStorage.getItem('fong_cache_v6');
       if (cachedData) {
         try {
           const parsed = JSON.parse(cachedData);
@@ -382,7 +388,6 @@
         const catalogItems = data.products || [];
         const packageItems = data.packages || [];
 
-        // 1. 一般商品清單
         catalogItems.forEach(item => {
           if (!item['商品名稱']) return;
           freshProducts.push({
@@ -397,12 +402,10 @@
           });
         });
 
-        // 2. 套裝商品清單
         packageItems.forEach(item => {
           if (!item['商品名稱']) return;
           const detail = item['包含內容'] || '';
           
-          // 自動加總原價
           let calcOriginalPrice = 0;
           if (detail) {
             const parts = detail.split(/[,，、]/).map(s => s.trim()).filter(s => s);
@@ -434,8 +437,9 @@
         const freshData = { products: freshProducts, settings: data.settings };
         const freshDataStr = JSON.stringify(freshData);
         
+        // 💡 避免無謂閃爍：只有資料有改動時才更新 UI
         if (freshDataStr !== cachedData) {
-          localStorage.setItem('fong_cache_v5', freshDataStr);
+          localStorage.setItem('fong_cache_v6', freshDataStr);
           products = freshProducts;
           siteSettings = data.settings || {};
           updateSettingsUI(siteSettings);
@@ -461,9 +465,6 @@
       if (settings['LINE連結']) {
         document.getElementById('line-link-btn').href = settings['LINE連結'];
       }
-      if (settings['滿額門檻']) {
-        document.getElementById('reward-bar-container').style.display = 'block';
-      }
       if (settings['主打商品'] && !hasShownAdThisLoad) {
         const targetTitles = settings['主打商品'].split(/[,，、]/).map(s => s.trim()).filter(s => s);
         const featuredProducts = [];
@@ -474,7 +475,7 @@
         if (featuredProducts.length > 0) {
           const popupGrid = document.getElementById('popup-grid');
           popupGrid.innerHTML = featuredProducts.map(fp => {
-            const imgSrc = fp.product.image || 'https://via.placeholder.com/150?text=🔥+超值特惠';
+            const imgSrc = fp.product.image || 'https://via.placeholder.com/150?text=🔥+超值推薦';
             return `
               <div class="popup-item" onclick="handleAdClick('${fp.product.title}')">
                 <img src="${imgSrc}" alt="${fp.product.title}">
@@ -520,7 +521,6 @@
 
     function setCategory(cat) { currentCategory = cat; renderCategories(); renderProducts(); }
 
-    // 🔍 點擊套裝中的商品，彈出單品詳情視窗
     function openSingleProductDetail(productName) {
       const p = products.find(item => item.title === productName);
       if (!p) return;
@@ -551,7 +551,7 @@
       const mediaBox = document.getElementById('detail-media-box');
       const iframe = document.getElementById('detail-iframe');
       mediaBox.classList.remove('playing');
-      iframe.src = ''; // 關閉視窗時停止播放
+      iframe.src = '';
       document.getElementById('product-detail-modal').style.display = 'none';
     }
 
@@ -578,10 +578,21 @@
         const card = document.createElement('div');
         card.className = 'product-card'; card.id = `card-${index}`;
 
-        // 封面圖
-        const coverImg = item.image || (item.isPackage ? 'https://via.placeholder.com/400x250/111111/ffcc00?text=🔥+超值優惠套裝' : 'https://via.placeholder.com/300x220?text=商品展示');
+        // 💡 核心優化：若沒有圖片且沒有影片，完全不渲染上方 media-container
+        let mediaBoxHtml = '';
+        const hasMedia = item.image || item.youtube;
+        if (hasMedia) {
+          const imgSrc = item.image || 'https://via.placeholder.com/300x220?text=點擊播放影片';
+          mediaBoxHtml = `
+            <div class="media-container" id="media-${index}" onclick="playVideo(${index})">
+              <img src="${imgSrc}" alt="${item.title}" onerror="this.src='https://via.placeholder.com/300x220?text=無圖片';">
+              <div class="play-button" style="${item.youtube ? '' : 'display:none;'}"></div>
+              ${item.youtube ? `<iframe id="iframe-${index}" src="${embedUrl}" title="${item.title}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>` : ''}
+            </div>
+          `;
+        }
 
-        // 套裝內容清單（可點擊查看詳情）
+        // 套裝內容清單
         let packageBoxHtml = '';
         if (item.isPackage && item.packageDetail) {
           const parts = item.packageDetail.split(/[,，、]/).map(s => s.trim()).filter(s => s);
@@ -606,11 +617,7 @@
         }
 
         card.innerHTML = `
-          <div class="media-container" id="media-${index}" onclick="playVideo(${index})">
-            <img src="${coverImg}" alt="${item.title}" onerror="this.src='https://via.placeholder.com/300x220?text=無圖片';">
-            <div class="play-button" style="${item.youtube ? '' : 'display:none;'}"></div>
-            ${item.youtube ? `<iframe id="iframe-${index}" src="${embedUrl}" title="${item.title}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>` : ''}
-          </div>
+          ${mediaBoxHtml}
           <div class="card-info">
             <div>
               <div class="title">${item.title}</div>
@@ -701,6 +708,7 @@
     function updateCartUI() {
       const count = Object.keys(selectedItems).length;
       const cartBtn = document.getElementById('floating-cart');
+      const rewardPill = document.getElementById('floating-reward-pill');
       const totalPrice = calculateCartTotal();
 
       if (count > 0) {
@@ -710,31 +718,27 @@
         cartBtn.style.display = 'none';
       }
 
-      updateRewardBar(totalPrice);
-    }
-
-    function updateRewardBar(totalPrice) {
+      // 💡 浮動滿額贈進度膠囊更新
       const threshold = parseInt(siteSettings['滿額門檻']) || 0;
-      const giftName = siteSettings['滿額贈品'] || '神秘贈品';
-      if (!threshold) return;
+      const giftName = siteSettings['滿額贈品'] || '';
 
-      const fill = document.getElementById('reward-progress-fill');
-      const titleText = document.getElementById('reward-title-text');
-      const statusText = document.getElementById('reward-status-text');
-
-      titleText.innerText = `🎁 滿 NT$${threshold} 送「${giftName}」`;
-      const percent = Math.min(100, Math.floor((totalPrice / threshold) * 100));
-      fill.style.width = percent + '%';
-
-      if (totalPrice >= threshold) {
-        statusText.innerHTML = `<span style="color:#28a745;">🎉 已達標！將獲得贈品</span>`;
+      if (count > 0 && threshold > 0 && giftName) {
+        rewardPill.style.display = 'inline-flex';
+        const percent = Math.min(100, Math.floor((totalPrice / threshold) * 100));
+        document.getElementById('floating-reward-bar').style.width = percent + '%';
+        
+        if (totalPrice >= threshold) {
+          document.getElementById('floating-reward-text').innerHTML = `🎉 已獲贈品：${giftName}`;
+        } else {
+          document.getElementById('floating-reward-text').innerHTML = `差 NT$${threshold - totalPrice} 送「${giftName}」`;
+        }
       } else {
-        statusText.innerHTML = `還差 <strong>NT$${threshold - totalPrice}</strong> 達標`;
+        rewardPill.style.display = 'none';
       }
     }
 
     function openCartModal() {
-      goToCartStep1(); // 每次打開預設回到步驟 1
+      goToCartStep1();
       renderCartItems();
       document.getElementById('cart-modal-overlay').style.display = 'flex';
     }
