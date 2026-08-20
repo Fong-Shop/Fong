@@ -355,7 +355,6 @@
         <div class="popup-title" style="color: #06C755; margin-bottom: 10px;">🛒 購物清單確認 (1/2)</div>
         <div class="cart-items-container" id="cart-items-container"></div>
         
-        <!-- 自選禮快捷提示區 -->
         <div id="cart-reward-hint" style="font-size: 0.88rem; color: #ffcc00; margin-bottom: 8px; background:#222; padding:8px 10px; border-radius:6px; border:1px solid #444;"></div>
         
         <div class="cart-total">總金額：<span id="cart-total-price">NT$0</span></div>
@@ -452,7 +451,7 @@
     }
 
     async function loadProducts() {
-      const cachedData = localStorage.getItem('fong_cache_v17');
+      const cachedData = localStorage.getItem('fong_cache_v18');
       if (cachedData) {
         try {
           const parsed = JSON.parse(cachedData);
@@ -528,7 +527,7 @@
         const freshDataStr = JSON.stringify(freshData);
         
         if (freshDataStr !== cachedData) {
-          localStorage.setItem('fong_cache_v17', freshDataStr);
+          localStorage.setItem('fong_cache_v18', freshDataStr);
           products = freshProducts;
           siteSettings = data.settings || {};
           parseRewardPool(siteSettings['滿額贈品']);
@@ -546,6 +545,7 @@
       }
     }
 
+    // 💡 直覺新解析：品項*點數 (例: 一發入魂*2, 3元笛音火箭*1, 仙女棒*0.5)
     function parseRewardPool(settingStr) {
       parsedRewardPool = [];
       if (!settingStr) return;
@@ -553,11 +553,11 @@
       parts.forEach(str => {
         const match = str.match(/^(.*?)\s*[*xX]\s*(\d+(\.\d+)?)$/);
         const name = match ? match[1].trim() : str;
-        const rate = match ? parseFloat(match[2]) : 1;
+        // 數字直接代表每換 1 份需要幾點
+        const ptsPerUnit = match ? parseFloat(match[2]) : 1;
         parsedRewardPool.push({
           name: name,
-          rate: rate,
-          ptsPerUnit: 1 / rate
+          ptsPerUnit: ptsPerUnit
         });
       });
     }
@@ -925,10 +925,7 @@
       } else {
         parsedRewardPool.forEach(item => {
           const qty = selectedRewards[item.name] || 0;
-          let rateDesc = '';
-          if (item.rate === 1) rateDesc = '消耗 1 點 / 換 1 份';
-          else if (item.rate > 1) rateDesc = `消耗 1 點 / 可換 ${item.rate} 份 (超值好禮)`;
-          else rateDesc = `消耗 ${1/item.rate} 點 / 換 1 份 (高級好禮)`;
+          let rateDesc = `消耗 ${item.ptsPerUnit} 點 / 換 1 份`;
 
           container.innerHTML += `
             <div class="reward-select-item">
