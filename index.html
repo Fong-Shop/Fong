@@ -143,7 +143,7 @@
 
     /* 🚀 右側直立工具群組（抬高避開下方長條） */
     .floating-tools {
-      position: fixed; bottom: 110px; right: 16px;
+      position: fixed; bottom: 150px; right: 10px;
       display: flex; flex-direction: column; align-items: center;
       gap: 10px; z-index: 999;
     }
@@ -824,7 +824,7 @@
         document.getElementById('bottom-reward-title').innerText = `🎁 滿 NT$${threshold} 送「${giftName}」`;
         
         if (totalPrice >= threshold) {
-          document.getElementById('bottom-reward-status').innerHTML = `<span style="color:#28a745; font-weight:bold;">🎉 已達標</span>`;
+          document.getElementById('bottom-reward-status').innerHTML = `<span style="color:#28a745; font-weight:bold;">幸福美滿</span>`;
         } else {
           document.getElementById('bottom-reward-status').innerHTML = `差 <strong>NT$${threshold - totalPrice}</strong>`;
         }
