@@ -15,7 +15,7 @@
     * { box-sizing: border-box; }
     body {
       font-family: Arial, sans-serif; background-color: #f4f4f4;
-      margin: 0; padding: 20px 20px 120px 20px;
+      margin: 0; padding: 20px 20px 100px 20px;
       display: flex; flex-direction: column; align-items: center;
     }
     .announcement {
@@ -109,39 +109,38 @@
     .add-cart-btn:hover { background-color: #444; }
     .add-cart-btn.selected { background-color: #28a745; color: #fff; border-color: #28a745; }
 
-    /* 🚀 底部浮動購物群組 (定位與層級優化) */
-    .floating-cart-group {
-      position: fixed; bottom: 20px; right: 20px;
-      display: flex; flex-direction: column; align-items: flex-end;
-      gap: 8px; z-index: 1000;
-    }
-
-    .floating-reward-pill {
-      background-color: rgba(20, 20, 20, 0.94);
-      color: #fff; border: 1px solid #ffcc00;
-      padding: 7px 14px; border-radius: 20px;
-      font-size: 0.82rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      display: none; align-items: center; gap: 8px; backdrop-filter: blur(4px);
-    }
-    .floating-reward-pill .mini-bar-bg {
-      width: 60px; height: 6px; background: #444; border-radius: 3px; overflow: hidden;
-    }
-    .floating-reward-pill .mini-bar-fill {
-      width: 0%; height: 100%; background: linear-gradient(90deg, #ff9900, #28a745); transition: width 0.3s ease;
-    }
-
+    /* 🛒 底部常駐結帳按鈕 */
     .floating-cart {
-      background-color: #06C755; color: #fff; padding: 13px 22px; border-radius: 50px;
-      cursor: pointer; font-size: 0.98rem; font-weight: bold; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-      display: none; transition: transform 0.2s;
+      position: fixed; bottom: 20px; right: 20px;
+      background-color: #06C755; color: #fff; padding: 14px 24px; border-radius: 50px;
+      cursor: pointer; font-size: 1rem; font-weight: bold; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      display: none; z-index: 1000; transition: transform 0.2s;
     }
     .floating-cart:hover { transform: scale(1.03); }
 
-    /* 側邊工具向上抬高，避免被底部購物按鈕蓋住 */
+    /* 🚀 側邊直立浮動工具群組 (含直式滿額贈徽章) */
     .floating-tools {
-      position: fixed; bottom: 120px; right: 20px; display: flex; flex-direction: column;
-      gap: 12px; z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+      position: fixed; bottom: 85px; right: 20px;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 12px; z-index: 999;
     }
+
+    .floating-reward-badge {
+      background-color: rgba(20, 20, 20, 0.94);
+      color: #fff; border: 1px solid #ffcc00;
+      padding: 10px 8px; border-radius: 12px;
+      font-size: 0.75rem; box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+      display: none; flex-direction: column; align-items: center; gap: 6px;
+      backdrop-filter: blur(4px); max-width: 65px; text-align: center; line-height: 1.2;
+    }
+    .floating-reward-badge .v-bar-bg {
+      width: 6px; height: 35px; background: #444; border-radius: 3px; overflow: hidden;
+      display: flex; flex-direction: column; justify-content: flex-end;
+    }
+    .floating-reward-badge .v-bar-fill {
+      width: 100%; height: 0%; background: linear-gradient(0deg, #ff9900, #28a745); transition: height 0.3s ease;
+    }
+
     .tool-btn {
       width: 45px; height: 45px; border-radius: 50%; background-color: #333;
       color: #fff; display: flex; justify-content: center; align-items: center;
@@ -150,6 +149,10 @@
     }
     .tool-btn:hover { transform: scale(1.1); }
     .tool-btn.line-btn { background-color: #00c300; font-size: 1.5rem; }
+
+    #scroll-top-btn {
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
 
     #loading { text-align: center; font-size: 1.2rem; color: #666; padding: 50px; width: 100%; }
 
@@ -317,22 +320,27 @@
   <div class="category-nav" id="category-nav"></div> 
   <div class="container" id="product-container"></div>
 
-  <!-- 🚀 浮動購物群組 (包含滿額進度膠囊條) -->
-  <div class="floating-cart-group" id="floating-cart-group">
-    <div class="floating-reward-pill" id="floating-reward-pill">
-      <span id="floating-reward-text">滿額贈</span>
-      <div class="mini-bar-bg">
-        <div class="mini-bar-fill" id="floating-reward-bar"></div>
-      </div>
-    </div>
-    <div class="floating-cart" id="floating-cart" onclick="openCartModal()">
-      🛒 已選取 <span id="cart-count">0</span> 項（NT$0）
-    </div>
+  <!-- 🛒 底部常駐結帳按鈕 -->
+  <div class="floating-cart" id="floating-cart" onclick="openCartModal()">
+    🛒 已選取 <span id="cart-count">0</span> 項（NT$0）
   </div>
 
+  <!-- 🚀 側邊直立工具群組 (含直式滿額贈徽章 + LINE + 回頂部) -->
   <div class="floating-tools" id="floating-tools">
+    <!-- 直立滿額贈徽章 -->
+    <div class="floating-reward-badge" id="floating-reward-badge">
+      <span style="font-weight: bold; color: #ffcc00;">滿額禮</span>
+      <div class="v-bar-bg">
+        <div class="v-bar-fill" id="floating-reward-bar"></div>
+      </div>
+      <span id="floating-reward-text" style="font-size: 0.65rem;">差$0</span>
+    </div>
+
+    <!-- LINE 好友按鈕 -->
     <a href="#" target="_blank" class="tool-btn line-btn" id="line-link-btn" title="加 LINE 好友">💬</a>
-    <div class="tool-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="回到頂部">⬆️</div>
+    
+    <!-- 回頂部按鈕 -->
+    <div class="tool-btn" id="scroll-top-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="回到頂部">⬆️</div>
   </div>
 
   <script>
@@ -367,7 +375,7 @@
     }
 
     async function loadProducts() {
-      const cachedData = localStorage.getItem('fong_cache_v7');
+      const cachedData = localStorage.getItem('fong_cache_v8');
       if (cachedData) {
         try {
           const parsed = JSON.parse(cachedData);
@@ -442,7 +450,7 @@
         const freshDataStr = JSON.stringify(freshData);
         
         if (freshDataStr !== cachedData) {
-          localStorage.setItem('fong_cache_v7', freshDataStr);
+          localStorage.setItem('fong_cache_v8', freshDataStr);
           products = freshProducts;
           siteSettings = data.settings || {};
           updateSettingsUI(siteSettings);
@@ -487,7 +495,6 @@
                 </div>
               `;
             } else {
-              // 💡 無圖片時直接顯示純文字風格按鈕，不顯示破圖
               return `
                 <div class="popup-item popup-item-noimg" onclick="handleAdClick('${fp.product.title}')">
                   <div>🔥 推薦品項</div>
@@ -550,7 +557,6 @@
 
       mediaBox.classList.remove('playing');
 
-      // 判斷單品詳情視窗是否有影音圖片
       if (p.image || p.youtube) {
         mediaBox.style.display = 'block';
         img.src = p.image || '';
@@ -601,7 +607,6 @@
         const card = document.createElement('div');
         card.className = 'product-card'; card.id = `card-${index}`;
 
-        // 若無圖片且無影片，完全不渲染上方 media-container
         let mediaBoxHtml = '';
         const hasMedia = item.image || item.youtube;
         if (hasMedia) {
@@ -615,7 +620,6 @@
           `;
         }
 
-        // 套裝清單
         let packageBoxHtml = '';
         if (item.isPackage && item.packageDetail) {
           const parts = item.packageDetail.split(/[,，、]/).map(s => s.trim()).filter(s => s);
@@ -731,7 +735,7 @@
     function updateCartUI() {
       const count = Object.keys(selectedItems).length;
       const cartBtn = document.getElementById('floating-cart');
-      const rewardPill = document.getElementById('floating-reward-pill');
+      const rewardBadge = document.getElementById('floating-reward-badge');
       const totalPrice = calculateCartTotal();
 
       if (count > 0) {
@@ -741,22 +745,22 @@
         cartBtn.style.display = 'none';
       }
 
-      // 滿額進度膠囊更新
+      // 直立滿額贈徽章連動
       const threshold = parseInt(siteSettings['滿額門檻']) || 0;
       const giftName = siteSettings['滿額贈品'] || '';
 
       if (count > 0 && threshold > 0 && giftName) {
-        rewardPill.style.display = 'inline-flex';
+        rewardBadge.style.display = 'flex';
         const percent = Math.min(100, Math.floor((totalPrice / threshold) * 100));
-        document.getElementById('floating-reward-bar').style.width = percent + '%';
+        document.getElementById('floating-reward-bar').style.height = percent + '%';
         
         if (totalPrice >= threshold) {
-          document.getElementById('floating-reward-text').innerHTML = `🎉 已獲贈品：${giftName}`;
+          document.getElementById('floating-reward-text').innerHTML = `<span style="color:#28a745; font-weight:bold;">已達標</span>`;
         } else {
-          document.getElementById('floating-reward-text').innerHTML = `差 NT$${threshold - totalPrice} 送「${giftName}」`;
+          document.getElementById('floating-reward-text').innerHTML = `差$${threshold - totalPrice}`;
         }
       } else {
-        rewardPill.style.display = 'none';
+        rewardBadge.style.display = 'none';
       }
     }
 
@@ -893,9 +897,14 @@
     }
 
     window.addEventListener('scroll', () => {
-      const tools = document.getElementById('floating-tools');
-      if (window.scrollY > 200) { tools.style.opacity = '1'; tools.style.pointerEvents = 'auto'; } 
-      else { tools.style.opacity = '0'; tools.style.pointerEvents = 'none'; }
+      const scrollBtn = document.getElementById('scroll-top-btn');
+      if (window.scrollY > 200) {
+        scrollBtn.style.opacity = '1';
+        scrollBtn.style.pointerEvents = 'auto';
+      } else {
+        scrollBtn.style.opacity = '0';
+        scrollBtn.style.pointerEvents = 'none';
+      }
     });
 
     loadProducts();
