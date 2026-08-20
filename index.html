@@ -15,9 +15,7 @@
     * { box-sizing: border-box; }
     body {
       font-family: Arial, sans-serif; background-color: #f4f4f4;
-      margin: 0; 
-      /* 增加底部留白至 220px，確保滑到最底時不被浮動按鈕遮擋 */
-      padding: 20px 20px 320px 20px;
+      margin: 0; padding: 20px 20px 140px 20px;
       display: flex; flex-direction: column; align-items: center;
     }
     .announcement {
@@ -111,36 +109,39 @@
     .add-cart-btn:hover { background-color: #444; }
     .add-cart-btn.selected { background-color: #28a745; color: #fff; border-color: #28a745; }
 
-    /* 🛒 底部常駐結帳按鈕 */
+    /* 🛒 底部置中浮動結帳按鈕 */
     .floating-cart {
-      position: fixed; bottom: 20px; right: 20px;
-      background-color: #06C755; color: #fff; padding: 14px 24px; border-radius: 50px;
-      cursor: pointer; font-size: 1rem; font-weight: bold; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-      display: none; z-index: 1000; transition: transform 0.2s;
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background-color: #06C755; color: #fff; padding: 13px 26px; border-radius: 50px;
+      cursor: pointer; font-size: 1rem; font-weight: bold; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
+      display: none; z-index: 1000; transition: transform 0.2s; white-space: nowrap;
     }
-    .floating-cart:hover { transform: scale(1.03); }
+    .floating-cart:hover { transform: translateX(-50%) scale(1.03); }
 
-    /* 🚀 側邊直立浮動工具群組 */
-    .floating-tools {
-      position: fixed; bottom: 85px; right: 20px;
-      display: flex; flex-direction: column; align-items: center;
-      gap: 12px; z-index: 999;
-    }
-
-    .floating-reward-badge {
+    /* 🎁 左下角獨立直立滿額贈徽章 */
+    .floating-left-reward {
+      position: fixed; bottom: 85px; left: 20px;
       background-color: rgba(20, 20, 20, 0.94);
       color: #fff; border: 1px solid #ffcc00;
       padding: 10px 8px; border-radius: 12px;
       font-size: 0.75rem; box-shadow: 0 4px 12px rgba(0,0,0,0.35);
       display: none; flex-direction: column; align-items: center; gap: 6px;
       backdrop-filter: blur(4px); max-width: 65px; text-align: center; line-height: 1.2;
+      z-index: 999;
     }
-    .floating-reward-badge .v-bar-bg {
+    .floating-left-reward .v-bar-bg {
       width: 6px; height: 35px; background: #444; border-radius: 3px; overflow: hidden;
       display: flex; flex-direction: column; justify-content: flex-end;
     }
-    .floating-reward-badge .v-bar-fill {
+    .floating-left-reward .v-bar-fill {
       width: 100%; height: 0%; background: linear-gradient(0deg, #ff9900, #28a745); transition: height 0.3s ease;
+    }
+
+    /* 🚀 右側直立工具群組 (置頂在上方，LINE在最下方) */
+    .floating-tools {
+      position: fixed; bottom: 85px; right: 20px;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 12px; z-index: 999;
     }
 
     .tool-btn {
@@ -161,42 +162,69 @@
     /* 🎁 彈窗樣式 */
     .popup-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background-color: rgba(0, 0, 0, 0.8); z-index: 2000; display: none; 
-      justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(3px);
+      background-color: rgba(0, 0, 0, 0.85); z-index: 2000; display: none; 
+      justify-content: center; align-items: center; padding: 15px; backdrop-filter: blur(3px);
     }
     .popup-content {
-      position: relative; max-width: 550px; width: 100%;
-      background: #1a1a1a; border-radius: 12px; border: 2px solid #ff4d4d;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); padding: 25px 20px;
+      position: relative; max-width: 480px; width: 100%; max-height: 85vh;
+      background: #181818; border-radius: 14px; border: 2px solid #ff4d4d;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6); padding: 22px 16px;
       animation: popIn 0.3s ease forwards; text-align: center;
+      display: flex; flex-direction: column; overflow: hidden;
     }
     @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
     .popup-close {
-      position: absolute; top: -15px; right: -15px; width: 36px; height: 36px; 
+      position: absolute; top: -12px; right: -12px; width: 34px; height: 34px; 
       background-color: #fff; color: #000; border-radius: 50%; display: flex; 
-      justify-content: center; align-items: center; font-size: 1.2rem; font-weight: bold; 
-      cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.3); z-index: 2010; transition: transform 0.2s;
+      justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; 
+      cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.4); z-index: 2010; transition: transform 0.2s;
     }
     .popup-close:hover { transform: scale(1.15) rotate(90deg); }
     
-    .popup-title { font-size: 1.3rem; font-weight: bold; color: #ffcc00; margin-bottom: 15px; }
-    .popup-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
-    .popup-item {
-      background: #000; border-radius: 8px; padding: 10px; cursor: pointer;
-      border: 2px solid #333; transition: all 0.2s; display: flex; flex-direction: column;
-      justify-content: space-between;
+    .popup-title { font-size: 1.25rem; font-weight: bold; color: #ffcc00; margin-bottom: 12px; }
+    
+    /* 🎁 彈窗流暢直列排版 (解決手機端雙欄長短不一問題) */
+    .popup-items-wrapper {
+      overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
+      padding-right: 4px; max-height: 68vh;
     }
-    .popup-item:hover { border-color: #ff4d4d; transform: scale(1.03); }
-    .popup-item img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 6px; }
-    .popup-item-title { color: #fff; font-size: 0.95rem; font-weight: bold; margin-top: 8px; }
+    .popup-items-wrapper::-webkit-scrollbar { width: 5px; }
+    .popup-items-wrapper::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
 
-    .popup-package-box {
-      background: #111; border: 1px dashed #ffcc00; border-radius: 6px;
-      padding: 10px 8px; margin: 8px 0; text-align: left;
+    .popup-card {
+      background: #000; border-radius: 10px; padding: 10px 12px; cursor: pointer;
+      border: 1px solid #333; transition: all 0.2s; text-align: left;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
     }
-    .popup-pkg-badge { font-size: 0.75rem; color: #ff9900; font-weight: bold; margin-bottom: 4px; }
-    .popup-pkg-list { font-size: 0.8rem; color: #ddd; line-height: 1.4; }
-    .popup-pkg-price { color: #ff4d4d; font-weight: bold; font-size: 0.95rem; margin-top: 6px; text-align: right; }
+    .popup-card:hover { border-color: #ff4d4d; background: #0d0d0d; }
+    
+    /* 單品帶圖風格 */
+    .popup-card-thumb {
+      width: 70px; height: 55px; border-radius: 6px; object-fit: cover; flex-shrink: 0;
+    }
+    .popup-card-main { flex-grow: 1; }
+    .popup-card-title { color: #fff; font-size: 0.95rem; font-weight: bold; line-height: 1.3; }
+    .popup-card-price { color: #ff4d4d; font-size: 0.95rem; font-weight: bold; margin-top: 4px; }
+    .popup-card-action {
+      background: #333; color: #ffcc00; padding: 6px 10px; border-radius: 6px;
+      font-size: 0.8rem; font-weight: bold; white-space: nowrap; flex-shrink: 0;
+    }
+
+    /* 套裝展開卡片風格 */
+    .popup-pkg-card {
+      flex-direction: column; align-items: stretch; gap: 8px; border-color: #554411;
+    }
+    .popup-pkg-header {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .popup-pkg-title { color: #ffcc00; font-size: 1rem; font-weight: bold; }
+    .popup-pkg-inner-box {
+      background: #141414; border: 1px dashed #444; border-radius: 6px;
+      padding: 8px 10px; font-size: 0.82rem; color: #ccc; line-height: 1.45;
+    }
+    .popup-pkg-bottom {
+      display: flex; justify-content: space-between; align-items: center; margin-top: 2px;
+    }
 
     /* 🛒 購物車視窗樣式 */
     .cart-modal-content {
@@ -250,12 +278,12 @@
 </head>
 <body>
 
-  <!-- 🎁 動態多格彈出廣告視窗 -->
+  <!-- 🎁 動態彈出廣告視窗 -->
   <div class="popup-overlay" id="popup-overlay">
     <div class="popup-content">
       <div class="popup-close" onclick="closePopup()">✖</div>
-      <div class="popup-title">🔥 優惠推薦</div>
-      <div class="popup-grid" id="popup-grid"></div>
+      <div class="popup-title">🔥 限時特選推薦</div>
+      <div class="popup-items-wrapper" id="popup-items-wrapper"></div>
     </div>
   </div>
 
@@ -328,22 +356,24 @@
   <div class="category-nav" id="category-nav"></div> 
   <div class="container" id="product-container"></div>
 
-  <!-- 🛒 底部常駐結帳按鈕 -->
+  <!-- 🛒 底部置中結帳按鈕 -->
   <div class="floating-cart" id="floating-cart" onclick="openCartModal()">
     🛒 已選取 <span id="cart-count">0</span> 項（NT$0）
   </div>
 
-  <!-- 🚀 側邊直立工具群組 -->
-  <div class="floating-tools" id="floating-tools">
-    <div class="floating-reward-badge" id="floating-reward-badge">
-      <span style="font-weight: bold; color: #ffcc00;">滿額禮</span>
-      <div class="v-bar-bg">
-        <div class="v-bar-fill" id="floating-reward-bar"></div>
-      </div>
-      <span id="floating-reward-text" style="font-size: 0.65rem;">差$0</span>
+  <!-- 🎁 左下角直立滿額贈徽章 -->
+  <div class="floating-left-reward" id="floating-left-reward">
+    <span style="font-weight: bold; color: #ffcc00;">滿額禮</span>
+    <div class="v-bar-bg">
+      <div class="v-bar-fill" id="floating-reward-bar"></div>
     </div>
-    <a href="#" target="_blank" class="tool-btn line-btn" id="line-link-btn" title="加 LINE 好友">💬</a>
+    <span id="floating-reward-text" style="font-size: 0.65rem;">差$0</span>
+  </div>
+
+  <!-- 🚀 右側直立工具群組 (置頂按鈕在上，LINE在下) -->
+  <div class="floating-tools" id="floating-tools">
     <div class="tool-btn" id="scroll-top-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="回到頂部">⬆️</div>
+    <a href="#" target="_blank" class="tool-btn line-btn" id="line-link-btn" title="加 LINE 好友">💬</a>
   </div>
 
   <script>
@@ -378,7 +408,7 @@
     }
 
     async function loadProducts() {
-      const cachedData = localStorage.getItem('fong_cache_v10');
+      const cachedData = localStorage.getItem('fong_cache_v11');
       if (cachedData) {
         try {
           const parsed = JSON.parse(cachedData);
@@ -453,7 +483,7 @@
         const freshDataStr = JSON.stringify(freshData);
         
         if (freshDataStr !== cachedData) {
-          localStorage.setItem('fong_cache_v10', freshDataStr);
+          localStorage.setItem('fong_cache_v11', freshDataStr);
           products = freshProducts;
           siteSettings = data.settings || {};
           updateSettingsUI(siteSettings);
@@ -488,42 +518,57 @@
         });
         
         if (featuredProducts.length > 0) {
-          const popupGrid = document.getElementById('popup-grid');
-          popupGrid.innerHTML = featuredProducts.map(fp => {
+          const wrapper = document.getElementById('popup-items-wrapper');
+          wrapper.innerHTML = featuredProducts.map(fp => {
             const p = fp.product;
-            if (p.image) {
-              return `
-                <div class="popup-item" onclick="handleAdClick('${p.title}')">
-                  <img src="${p.image}" alt="${p.title}">
-                  <div class="popup-item-title">${p.title}</div>
-                  ${p.specialPrice ? `<div style="color:#ff4d4d; font-size:0.9rem; font-weight:bold; margin-top:4px;">特價 NT$${p.specialPrice}</div>` : ''}
-                </div>
-              `;
-            } else if (p.isPackage && p.packageDetail) {
+            
+            // 套裝結構：滿版展開清單
+            if (p.isPackage && p.packageDetail) {
               const listItems = p.packageDetail.split(/[,，、]/).map(s => `• ${s.trim()}`).join('<br>');
               return `
-                <div class="popup-item" onclick="handleAdClick('${p.title}')">
-                  <div>
-                    <div style="color: #ffcc00; font-size:0.8rem; font-weight:bold;">🔥 推薦套裝組合</div>
-                    <div class="popup-item-title" style="margin-top:2px; margin-bottom:6px;">${p.title}</div>
-                    <div class="popup-package-box">
-                      <div class="popup-pkg-badge">📦 內含品項：</div>
-                      <div class="popup-pkg-list">${listItems}</div>
-                    </div>
+                <div class="popup-card popup-pkg-card" onclick="handleAdClick('${p.title}')">
+                  <div class="popup-pkg-header">
+                    <span class="popup-pkg-title">🔥 ${p.title}</span>
+                    <span class="popup-card-action">點擊選購 ➔</span>
                   </div>
-                  <div class="popup-pkg-price">特價 NT$${p.specialPrice}</div>
+                  <div class="popup-pkg-inner-box">
+                    <div style="color:#ff9900; font-size:0.75rem; font-weight:bold; margin-bottom:3px;">📦 組合內含品項：</div>
+                    ${listItems}
+                  </div>
+                  <div class="popup-pkg-bottom">
+                    <span style="font-size:0.8rem; color:#aaa;">限時特惠套裝</span>
+                    <span class="popup-card-price">特價 NT$${p.specialPrice}</span>
+                  </div>
                 </div>
               `;
-            } else {
+            } 
+            // 單品帶圖結構
+            else if (p.image) {
               return `
-                <div class="popup-item popup-item-noimg" onclick="handleAdClick('${p.title}')">
-                  <div style="font-size:0.8rem; color:#aaa;">🔥 熱銷推薦</div>
-                  <div class="popup-item-title">${p.title}</div>
-                  ${p.specialPrice ? `<div style="color:#ff4d4d; font-size:0.9rem; font-weight:bold; margin-top:6px;">特價 NT$${p.specialPrice}</div>` : ''}
+                <div class="popup-card" onclick="handleAdClick('${p.title}')">
+                  <img src="${p.image}" class="popup-card-thumb" alt="${p.title}">
+                  <div class="popup-card-main">
+                    <div class="popup-card-title">${p.title}</div>
+                    <div class="popup-card-price">特價 NT$${p.specialPrice || p.originalPrice}</div>
+                  </div>
+                  <div class="popup-card-action">選購 ➔</div>
+                </div>
+              `;
+            }
+            // 單品純文字結構
+            else {
+              return `
+                <div class="popup-card" onclick="handleAdClick('${p.title}')">
+                  <div class="popup-card-main">
+                    <div class="popup-card-title">${p.title}</div>
+                    <div class="popup-card-price">特價 NT$${p.specialPrice || p.originalPrice}</div>
+                  </div>
+                  <div class="popup-card-action">選購 ➔</div>
                 </div>
               `;
             }
           }).join('');
+          
           document.getElementById('popup-overlay').style.display = 'flex';
           hasShownAdThisLoad = true;
         }
@@ -756,7 +801,7 @@
     function updateCartUI() {
       const count = Object.keys(selectedItems).length;
       const cartBtn = document.getElementById('floating-cart');
-      const rewardBadge = document.getElementById('floating-reward-badge');
+      const rewardBadge = document.getElementById('floating-left-reward');
       const totalPrice = calculateCartTotal();
 
       if (count > 0) {
