@@ -6,7 +6,7 @@
   <title>FONG 煙火精選目錄</title>
 
   <meta property="og:title" content="FONG 煙火精選商品目錄">
-  <meta property="og:description" content="提供最新煙火款式、價格及現場施放影片展示，歡迎選購！">
+  <meta property="og:description" content="提供最新煙火款式、套裝優惠、價格及施放影片展示，歡迎選購！">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://fong-shop.github.io/Fong/">
   <meta property="og:image" content="https://fong-shop.github.io/Fong/messageImage_1785794548467.jpg">
@@ -15,16 +15,27 @@
     * { box-sizing: border-box; }
     body {
       font-family: Arial, sans-serif; background-color: #f4f4f4;
-      margin: 0; padding: 20px 20px 80px 20px;
+      margin: 0; padding: 20px 20px 90px 20px;
       display: flex; flex-direction: column; align-items: center;
     }
     .announcement {
       width: 100%; max-width: 1000px; background-color: #fff3cd; 
       color: #856404; padding: 12px 20px; border-radius: 8px;
-      margin-bottom: 20px; border-left: 5px solid #ffc107;
+      margin-bottom: 15px; border-left: 5px solid #ffc107;
       font-size: 0.95rem; line-height: 1.5;
       box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: none; 
     }
+
+    /* 🎁 滿額贈進度條 */
+    .reward-bar-container {
+      width: 100%; max-width: 1000px; background: #fff;
+      padding: 12px 20px; border-radius: 8px; margin-bottom: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: none;
+    }
+    .reward-text { font-size: 0.95rem; font-weight: bold; color: #333; margin-bottom: 6px; display: flex; justify-content: space-between; }
+    .reward-progress-bg { width: 100%; height: 10px; background: #eee; border-radius: 5px; overflow: hidden; }
+    .reward-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ff9900, #28a745); transition: width 0.3s ease; }
+
     .category-nav {
       display: flex; gap: 12px; margin-bottom: 25px; overflow-x: auto;
       padding-bottom: 5px; max-width: 1000px; width: 100%; scrollbar-width: none; 
@@ -47,11 +58,21 @@
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); border: 2px solid #000;
       display: flex; flex-direction: column; transition: box-shadow 0.3s ease;
     }
+
     .media-container { position: relative; width: 100%; height: 220px; cursor: pointer; background-color: #222; }
     .media-container img {
       width: 100%; height: 100%; object-fit: cover; position: absolute;
       top: 0; left: 0; z-index: 10; transition: opacity 0.3s;
     }
+
+    /* 拼貼多格圖 */
+    .grid-collage {
+      width: 100%; height: 100%; display: grid;
+      grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+      gap: 2px; position: absolute; top: 0; left: 0; z-index: 10; background: #333;
+    }
+    .grid-collage img { position: static; width: 100%; height: 100%; object-fit: cover; }
+
     .play-button {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
       width: 50px; height: 50px; background-color: rgba(0, 0, 0, 0.7);
@@ -65,13 +86,15 @@
     }
     .media-container:hover .play-button { transform: translate(-50%, -50%) scale(1.1); background-color: rgba(255, 0, 0, 0.85); }
     .media-container iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; z-index: 5; }
-    .media-container.playing img, .media-container.playing .play-button { opacity: 0; pointer-events: none; }
+    .media-container.playing .grid-collage, .media-container.playing img, .media-container.playing .play-button { opacity: 0; pointer-events: none; }
 
     .card-info { padding: 15px; text-align: center; display: flex; flex-direction: column; flex-grow: 1; justify-content: space-between; }
-    .title { font-size: 1.1rem; font-weight: bold; margin-bottom: 8px; }
+    .title { font-size: 1.1rem; font-weight: bold; margin-bottom: 6px; }
+    .package-detail { font-size: 0.85rem; color: #ffcc00; margin-bottom: 8px; line-height: 1.4; }
     .price-group { font-size: 0.95rem; margin-bottom: 12px; }
     .original-price { text-decoration: line-through; color: #aaa; margin-right: 8px; }
     .special-price { color: #ff4d4d; font-weight: bold; font-size: 1.1rem; }
+
     .quantity-control { display: flex; justify-content: center; align-items: center; margin-bottom: 10px; gap: 12px; }
     .qty-btn {
       background-color: #333; color: #fff; border: 1px solid #555;
@@ -80,6 +103,7 @@
     }
     .qty-btn:active { background-color: #555; }
     .qty-number { font-size: 1.1rem; font-weight: bold; min-width: 24px; }
+
     .add-cart-btn {
       width: 100%; padding: 10px; background-color: #333; color: #fff;
       border: 1px solid #555; border-radius: 6px; cursor: pointer;
@@ -111,7 +135,7 @@
 
     #loading { text-align: center; font-size: 1.2rem; color: #666; padding: 50px; width: 100%; }
 
-    /* 🎁 動態多格彈出廣告視窗樣式 */
+    /* 🎁 彈出廣告視窗樣式 */
     .popup-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background-color: rgba(0, 0, 0, 0.8); z-index: 2000; display: none; 
@@ -147,9 +171,9 @@
       background: #1a1a1a; border-radius: 12px; border: 2px solid #06C755;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); padding: 25px 20px;
       animation: popIn 0.3s ease forwards; text-align: left;
-      color: #fff; max-height: 85vh; display: flex; flex-direction: column;
+      color: #fff; max-height: 88vh; display: flex; flex-direction: column;
     }
-    .cart-items-container { overflow-y: auto; max-height: 50vh; margin-bottom: 15px; padding-right: 5px; }
+    .cart-items-container { overflow-y: auto; max-height: 40vh; margin-bottom: 15px; padding-right: 5px; }
     .cart-items-container::-webkit-scrollbar { width: 6px; }
     .cart-items-container::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
     .cart-item {
@@ -157,37 +181,72 @@
       padding: 12px 0; border-bottom: 1px solid #333;
     }
     .cart-item-info { flex-grow: 1; padding-right: 10px; }
-    .cart-item-title { font-weight: bold; font-size: 1.05rem; margin-bottom: 5px; }
+    .cart-item-title { font-weight: bold; font-size: 1.05rem; margin-bottom: 4px; }
+    .cart-item-desc { font-size: 0.8rem; color: #ffcc00; margin-bottom: 4px; }
     .cart-item-price { color: #ff4d4d; font-size: 0.95rem; }
-    .cart-item-actions { display: flex; align-items: center; gap: 12px; }
+    .cart-item-actions { display: flex; align-items: center; gap: 10px; }
     .cart-del-btn {
       background-color: #ff4d4d; color: white; border: none; border-radius: 6px;
-      width: 30px; height: 30px; font-weight: bold; cursor: pointer; transition: 0.2s;
+      width: 28px; height: 28px; font-weight: bold; cursor: pointer;
     }
-    .cart-del-btn:hover { background-color: #cc0000; }
+    
+    /* 訂購人與備註欄位樣式 */
+    .order-inputs {
+      margin-top: 10px; display: flex; flex-direction: column; gap: 10px;
+      padding-top: 12px; border-top: 1px dashed #444;
+    }
+    .order-input-group { display: flex; flex-direction: column; gap: 4px; }
+    .order-input-group label { font-size: 0.85rem; color: #aaa; }
+    .order-input-group input, .order-input-group textarea {
+      width: 100%; background: #2a2a2a; border: 1px solid #444; color: #fff;
+      padding: 8px 12px; border-radius: 6px; font-size: 0.95rem; outline: none;
+    }
+    .order-input-group input:focus, .order-input-group textarea:focus { border-color: #06C755; }
+    .order-input-group textarea { resize: none; height: 50px; }
+
     .cart-total {
-      text-align: right; font-size: 1.4rem; font-weight: bold; color: #ffcc00;
-      padding-top: 15px; border-top: 2px solid #444; margin-bottom: 15px;
+      text-align: right; font-size: 1.3rem; font-weight: bold; color: #ffcc00;
+      padding: 12px 0 8px 0; border-top: 2px solid #444; margin-top: 10px;
     }
   </style>
 </head>
 <body>
 
+  <!-- 🎁 動態多格彈出廣告視窗 -->
   <div class="popup-overlay" id="popup-overlay">
     <div class="popup-content">
       <div class="popup-close" onclick="closePopup()">✖</div>
-      <div class="popup-title">🔥 優惠主打推薦</div>
+      <div class="popup-title">🔥 優惠推薦</div>
       <div class="popup-grid" id="popup-grid"></div>
     </div>
   </div>
 
+  <!-- 🛒 購物車確認視窗 -->
   <div class="popup-overlay" id="cart-modal-overlay">
     <div class="cart-modal-content">
       <div class="popup-close" onclick="closeCartModal()">✖</div>
       <div class="popup-title" style="color: #06C755; margin-bottom: 10px;">🛒 購物車清單確認</div>
+      
       <div class="cart-items-container" id="cart-items-container"></div>
+      
+      <!-- 滿額贈提示 -->
+      <div id="cart-reward-hint" style="font-size: 0.9rem; color: #ffcc00; margin-bottom: 6px;"></div>
+
+      <!-- 📝 訂購備註欄位 -->
+      <div class="order-inputs">
+        <div class="order-input-group">
+          <label>您的稱呼 / 姓名（選填）：</label>
+          <input type="text" id="order-customer-name" placeholder="例如：陳先生 / 林小姐">
+        </div>
+        <div class="order-input-group">
+          <label>取貨時間 / 備註說明（選填）：</label>
+          <textarea id="order-customer-note" placeholder="例如：中秋節當晚 8 點自取、需要提袋..."></textarea>
+        </div>
+      </div>
+
       <div class="cart-total">總金額：<span id="cart-total-price">NT$0</span></div>
-      <button class="add-cart-btn selected" style="font-size: 1.1rem; padding: 15px; background-color: #06C755; border:none;" onclick="confirmSendToLine()">
+
+      <button class="add-cart-btn selected" style="font-size: 1.1rem; padding: 14px; background-color: #06C755; border:none;" onclick="confirmSendToLine()">
         ✅ 確認無誤，傳送至 LINE
       </button>
     </div>
@@ -196,6 +255,18 @@
   <div id="loading">載入商品目錄中...</div>
 
   <div class="announcement" id="announcement-box"></div>
+
+  <!-- 🎁 頁面滿額贈進度條 -->
+  <div class="reward-bar-container" id="reward-bar-container">
+    <div class="reward-text">
+      <span id="reward-title-text">滿額贈好禮</span>
+      <span id="reward-status-text">未達門檻</span>
+    </div>
+    <div class="reward-progress-bg">
+      <div class="reward-progress-fill" id="reward-progress-fill"></div>
+    </div>
+  </div>
+
   <div class="category-nav" id="category-nav"></div> 
   <div class="container" id="product-container"></div>
 
@@ -212,6 +283,7 @@
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdvebTnsOSgEURWczwLjLuQPIz9tbHWKSpEIgsT38V5jR7vzHUHbFiPGtH5F0rQJEZWA/exec";
 
     let products = [];
+    let siteSettings = {};
     const selectedItems = {}; 
     let currentCategory = '全部'; 
     let hasShownAdThisLoad = false; 
@@ -224,7 +296,6 @@
       return `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
     }
 
-    // 💾 讀取記憶中的購物車
     function loadSavedCart() {
       const savedCart = localStorage.getItem('fong_shopping_cart');
       if (savedCart) {
@@ -235,21 +306,21 @@
       }
     }
 
-    // 💾 儲存購物車狀態
     function saveCart() {
       localStorage.setItem('fong_shopping_cart', JSON.stringify(selectedItems));
     }
 
     async function loadProducts() {
-      const cachedData = localStorage.getItem('fong_cache_v3');
+      const cachedData = localStorage.getItem('fong_cache_v4');
       if (cachedData) {
         try {
           const parsed = JSON.parse(cachedData);
           products = parsed.products;
-          updateSettingsUI(parsed.settings);
+          siteSettings = parsed.settings || {};
+          updateSettingsUI(siteSettings);
           document.getElementById('loading').style.display = 'none';
           
-          loadSavedCart(); // 讀取記憶購物車
+          loadSavedCart();
           renderCategories();
           renderProducts();
           updateCartUI();
@@ -262,12 +333,60 @@
         const data = await response.json(); 
         
         const freshProducts = [];
-        data.products.forEach(item => {
+        const catalogItems = data.products || [];
+        const packageItems = data.packages || [];
+
+        // 1. 單品清單處理
+        catalogItems.forEach(item => {
           if (!item['商品名稱']) return;
           freshProducts.push({
-            title: item['商品名稱'] || '', image: item['圖片檔名'] || '',
-            youtube: item['影片網址'] || '', originalPrice: item['原價'] || '',
-            specialPrice: item['特價'] || '', status: item['狀態'] || '', category: item['分類'] || '其他' 
+            title: item['商品名稱'] || '',
+            image: item['圖片檔名'] || '',
+            youtube: item['影片網址'] || '',
+            originalPrice: item['原價'] || '',
+            specialPrice: item['特價'] || '',
+            status: item['狀態'] || '',
+            category: item['分類'] || '其他',
+            isPackage: false
+          });
+        });
+
+        // 2. 套裝清單處理（自動計算原價與合成多格圖）
+        packageItems.forEach(item => {
+          if (!item['商品名稱']) return;
+          const detail = item['包含內容'] || '';
+          
+          // 自動加總原價
+          let calcOriginalPrice = 0;
+          const collageImages = [];
+          if (detail) {
+            const parts = detail.split(/[,，、]/).map(s => s.trim()).filter(s => s);
+            parts.forEach(pStr => {
+              const match = pStr.match(/^(.*?)\s*[*xX]\s*(\d+)$/);
+              const pName = match ? match[1].trim() : pStr;
+              const pQty = match ? parseInt(match[2]) : 1;
+              const target = freshProducts.find(p => p.title === pName);
+              if (target) {
+                const singlePrice = parseInt(target.originalPrice) || parseInt(target.specialPrice) || 0;
+                calcOriginalPrice += singlePrice * pQty;
+                if (target.image && collageImages.length < 4) {
+                  collageImages.push(target.image);
+                }
+              }
+            });
+          }
+
+          freshProducts.push({
+            title: item['商品名稱'] || '',
+            image: item['圖片檔名'] || '', // 若留空前端自動拼裝
+            youtube: item['影片網址'] || '',
+            originalPrice: item['原價'] ? item['原價'] : (calcOriginalPrice > 0 ? calcOriginalPrice : ''),
+            specialPrice: item['特價'] || '',
+            status: item['狀態'] || '',
+            category: item['分類'] || '套裝',
+            packageDetail: detail,
+            collageImages: collageImages,
+            isPackage: true
           });
         });
 
@@ -275,12 +394,13 @@
         const freshDataStr = JSON.stringify(freshData);
         
         if (freshDataStr !== cachedData) {
-          localStorage.setItem('fong_cache_v3', freshDataStr);
+          localStorage.setItem('fong_cache_v4', freshDataStr);
           products = freshProducts;
-          updateSettingsUI(data.settings);
+          siteSettings = data.settings || {};
+          updateSettingsUI(siteSettings);
           document.getElementById('loading').style.display = 'none';
           
-          loadSavedCart(); // 讀取記憶購物車
+          loadSavedCart();
           renderCategories();
           renderProducts();
           updateCartUI();
@@ -300,6 +420,9 @@
       if (settings['LINE連結']) {
         document.getElementById('line-link-btn').href = settings['LINE連結'];
       }
+      if (settings['滿額門檻']) {
+        document.getElementById('reward-bar-container').style.display = 'block';
+      }
       if (settings['主打商品'] && !hasShownAdThisLoad) {
         const targetTitles = settings['主打商品'].split(/[,，、]/).map(s => s.trim()).filter(s => s);
         const featuredProducts = [];
@@ -309,12 +432,18 @@
         });
         if (featuredProducts.length > 0) {
           const popupGrid = document.getElementById('popup-grid');
-          popupGrid.innerHTML = featuredProducts.map(fp => `
-            <div class="popup-item" onclick="handleAdClick('${fp.product.title}')">
-              <img src="${fp.product.image}" alt="${fp.product.title}" onerror="this.src='https://via.placeholder.com/150?text=無圖片';">
-              <div class="popup-item-title">${fp.product.title}</div>
-            </div>
-          `).join('');
+          popupGrid.innerHTML = featuredProducts.map(fp => {
+            let imgSrc = fp.product.image;
+            if (!imgSrc && fp.product.collageImages && fp.product.collageImages.length > 0) {
+              imgSrc = fp.product.collageImages[0];
+            }
+            return `
+              <div class="popup-item" onclick="handleAdClick('${fp.product.title}')">
+                <img src="${imgSrc || 'https://via.placeholder.com/150?text=主打商品'}" alt="${fp.product.title}">
+                <div class="popup-item-title">${fp.product.title}</div>
+              </div>
+            `;
+          }).join('');
           document.getElementById('popup-overlay').style.display = 'flex';
           hasShownAdThisLoad = true;
         }
@@ -361,22 +490,35 @@
         if (statusStr === 'N' || statusStr === '下架') return;
         if (currentCategory !== '全部' && item.category !== currentCategory) return;
         
-        // 如果記憶裡有該商品數量，讀取出來
         const memoryQty = selectedItems[item.title] || 1;
         const embedUrl = getEmbedUrl(item.youtube);
         const card = document.createElement('div');
         card.className = 'product-card'; card.id = `card-${index}`;
+
+        // 圖片展示區（判斷是否為多格拼貼）
+        let mediaHtml = '';
+        if (item.image) {
+          mediaHtml = `<img src="${item.image}" alt="${item.title}" onerror="this.src='https://via.placeholder.com/300x220?text=無圖片';">`;
+        } else if (item.collageImages && item.collageImages.length > 0) {
+          mediaHtml = `<div class="grid-collage">${item.collageImages.map(img => `<img src="${img}">`).join('')}</div>`;
+        } else {
+          mediaHtml = `<img src="https://via.placeholder.com/300x220?text=商品展示" alt="${item.title}">`;
+        }
+
+        const packageDetailHtml = item.packageDetail ? `<div class="package-detail">內含：${item.packageDetail}</div>` : '';
+
         card.innerHTML = `
           <div class="media-container" id="media-${index}" onclick="playVideo(${index})">
-            <img src="${item.image}" alt="${item.title}" onerror="this.src='https://via.placeholder.com/300x220?text=無圖片';">
-            <div class="play-button"></div>
-            <iframe id="iframe-${index}" src="${embedUrl}" title="${item.title}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            ${mediaHtml}
+            <div class="play-button" style="${item.youtube ? '' : 'display:none;'}"></div>
+            ${item.youtube ? `<iframe id="iframe-${index}" src="${embedUrl}" title="${item.title}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>` : ''}
           </div>
           <div class="card-info">
             <div>
               <div class="title">${item.title}</div>
+              ${packageDetailHtml}
               <div class="price-group">
-                售價 <span class="original-price">NT$${item.originalPrice}</span>
+                ${item.originalPrice ? `售價 <span class="original-price">NT$${item.originalPrice}</span>` : ''}
                 特價 <span class="special-price">NT$${item.specialPrice}</span>
               </div>
             </div>
@@ -404,7 +546,7 @@
             document.getElementById(`qty-${index}`).innerText = selectedItems[item.title];
           } else {
             btn.innerText = '＋ 加入購買清單'; btn.classList.remove('selected');
-            document.getElementById(`qty-${index}`).innerText = 1; // 回復預設1
+            document.getElementById(`qty-${index}`).innerText = 1;
           }
         }
       });
@@ -413,6 +555,7 @@
     function playVideo(index) {
       const mediaBox = document.getElementById(`media-${index}`);
       const iframe = document.getElementById(`iframe-${index}`);
+      if (!iframe) return;
       mediaBox.classList.add('playing');
       let currentSrc = iframe.src;
       if (!currentSrc.includes('autoplay=1')) { iframe.src = currentSrc + (currentSrc.includes('?') ? '&' : '?') + 'autoplay=1'; }
@@ -428,7 +571,8 @@
       
       if (selectedItems[title]) {
         selectedItems[title] = currentQty;
-        saveCart(); // 💾 儲存變更
+        saveCart();
+        updateCartUI();
         if (document.getElementById('cart-modal-overlay').style.display === 'flex') openCartModal();
       }
     }
@@ -440,19 +584,57 @@
       } else {
         selectedItems[title] = currentQty;
       }
-      saveCart(); // 💾 儲存變更
+      saveCart();
       syncCartButtons();
       updateCartUI();
+    }
+
+    function calculateCartTotal() {
+      let total = 0;
+      for (let title in selectedItems) {
+        const qty = selectedItems[title];
+        const product = products.find(p => p.title === title);
+        let price = product ? (parseInt(product.specialPrice) || parseInt(product.originalPrice) || 0) : 0;
+        total += price * qty;
+      }
+      return total;
     }
 
     function updateCartUI() {
       const count = Object.keys(selectedItems).length;
       const cartBtn = document.getElementById('floating-cart');
+      const totalPrice = calculateCartTotal();
+
       if (count > 0) {
-        cartBtn.innerHTML = `🛒 已選取 <span id="cart-count">${count}</span> 項（點此查看清單）`;
+        cartBtn.innerHTML = `🛒 已選取 <span id="cart-count">${count}</span> 項（NT$${totalPrice}）`;
         cartBtn.style.display = 'block';
       } else {
         cartBtn.style.display = 'none';
+      }
+
+      // 更新首頁滿額進度條
+      updateRewardBar(totalPrice);
+    }
+
+    function updateRewardBar(totalPrice) {
+      const threshold = parseInt(siteSettings['滿額門檻']) || 0;
+      const giftName = siteSettings['滿額贈品'] || '神秘贈品';
+      if (!threshold) return;
+
+      const fill = document.getElementById('reward-progress-fill');
+      const titleText = document.getElementById('reward-title-text');
+      const statusText = document.getElementById('reward-status-text');
+
+      titleText.innerText = `🎁 滿 NT$${threshold} 送「${giftName}」`;
+
+      const percent = Math.min(100, Math.floor((totalPrice / threshold) * 100));
+      fill.style.width = percent + '%';
+
+      if (totalPrice >= threshold) {
+        statusText.innerHTML = `<span style="color:#28a745;">🎉 已達標！將獲得贈品</span>`;
+      } else {
+        const diff = threshold - totalPrice;
+        statusText.innerHTML = `還差 <strong>NT$${diff}</strong> 達標`;
       }
     }
 
@@ -468,10 +650,13 @@
         let price = product ? (parseInt(product.specialPrice) || parseInt(product.originalPrice) || 0) : 0;
         totalPrice += price * qty;
         
+        const detailHtml = product && product.packageDetail ? `<div class="cart-item-desc">內含：${product.packageDetail}</div>` : '';
+
         container.innerHTML += `
           <div class="cart-item">
             <div class="cart-item-info">
               <div class="cart-item-title">${title}</div>
+              ${detailHtml}
               <div class="cart-item-price">單價 NT$${price}</div>
             </div>
             <div class="cart-item-actions">
@@ -485,7 +670,23 @@
           </div>
         `;
       }
+
       document.getElementById('cart-total-price').innerText = `NT$${totalPrice}`;
+
+      // 購物車內的滿額提示
+      const threshold = parseInt(siteSettings['滿額門檻']) || 0;
+      const giftName = siteSettings['滿額贈品'] || '';
+      const rewardHint = document.getElementById('cart-reward-hint');
+      if (threshold && giftName) {
+        if (totalPrice >= threshold) {
+          rewardHint.innerHTML = `🎉 已達滿額門檻！訂單將加贈：<strong>${giftName}</strong>`;
+        } else {
+          rewardHint.innerHTML = `💡 還差 NT$${threshold - totalPrice} 即贈送「${giftName}」！`;
+        }
+      } else {
+        rewardHint.innerHTML = '';
+      }
+
       document.getElementById('cart-modal-overlay').style.display = 'flex';
     }
 
@@ -496,40 +697,54 @@
       currentQty += delta;
       if (currentQty < 1) currentQty = 1; 
       selectedItems[title] = currentQty;
-      saveCart(); // 💾 儲存變更
+      saveCart();
       syncCartButtons();
+      updateCartUI();
       openCartModal();   
     }
 
     function removeCartItem(title) {
       delete selectedItems[title];
-      saveCart(); // 💾 儲存變更
+      saveCart();
       updateCartUI();
       syncCartButtons();
       if (Object.keys(selectedItems).length === 0) { closeCartModal(); } else { openCartModal(); }
     }
 
-    // 🚀 傳送至 LINE：恢復原本的文字分享機制
     function confirmSendToLine() {
       if (Object.keys(selectedItems).length === 0) return;
       
-      let totalPrice = 0;
-      let message = "你好！我想購買以下煙火商品：\n------------------------\n";
+      const custName = document.getElementById('order-customer-name').value.trim();
+      const custNote = document.getElementById('order-customer-note').value.trim();
+      const totalPrice = calculateCartTotal();
+      const threshold = parseInt(siteSettings['滿額門檻']) || 0;
+      const giftName = siteSettings['滿額贈品'] || '';
+
+      let message = "你好！我想預訂以下煙火商品：\n------------------------\n";
       
       for (let title in selectedItems) { 
         const qty = selectedItems[title];
         const product = products.find(p => p.title === title);
         let price = product ? (parseInt(product.specialPrice) || parseInt(product.originalPrice) || 0) : 0;
-        
-        totalPrice += price * qty;
-        message += `• ${title} x ${qty}\n`; 
+        message += `• ${title} x ${qty} (小計 NT$${price * qty})\n`; 
       }
       
       message += "------------------------\n";
-      message += `💰 預估總金額：NT$${totalPrice}\n\n`;
-      message += "請問目前都有現貨嗎？";
+      message += `💰 預估總金額：NT$${totalPrice}\n`;
+
+      if (threshold && totalPrice >= threshold && giftName) {
+        message += `🎁 滿額贈品：${giftName}\n`;
+      }
+
+      if (custName) {
+        message += `👤 訂購人稱呼：${custName}\n`;
+      }
+      if (custNote) {
+        message += `📝 備註說明：${custNote}\n`;
+      }
+
+      message += "\n請問目前都有現貨嗎？";
       
-      // 使用 LINE 分享文字 API，會跳出選擇好友的畫面
       const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(message)}`;
       window.location.href = lineUrl;
     }
