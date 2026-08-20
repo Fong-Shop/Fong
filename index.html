@@ -110,16 +110,17 @@
     .add-cart-btn:hover { background-color: #444; }
     .add-cart-btn.selected { background-color: #28a745; color: #fff; border-color: #28a745; }
 
-    /* 🎁 獨立滿額禮進度膠囊 */
+    /* 🎁 獨立滿額禮自選膠囊 (點擊可彈出自選視窗) */
     .bottom-reward-pill {
       position: fixed; bottom: 78px; left: 50%; transform: translateX(-50%);
-      width: calc(100% - 10px); max-width: 360px;
+      width: calc(100% - 130px); max-width: 260px;
       background-color: rgba(20, 20, 20, 0.95);
       color: #fff; border: 1px solid #ffcc00; padding: 6px 12px;
       border-radius: 20px; font-size: 0.78rem; box-shadow: 0 4px 12px rgba(0,0,0,0.35);
       display: none; flex-direction: column; gap: 4px; backdrop-filter: blur(4px);
-      z-index: 1000;
+      z-index: 1000; cursor: pointer; transition: transform 0.2s;
     }
+    .bottom-reward-pill:hover { transform: translateX(-50%) scale(1.03); border-color: #fff; }
     .bottom-reward-text-row {
       display: flex; justify-content: space-between; align-items: center; font-size: 0.76rem;
     }
@@ -163,7 +164,7 @@
 
     #loading { text-align: center; font-size: 1.2rem; color: #666; padding: 50px; width: 100%; }
 
-    /* 🎁 彈窗樣式 */
+    /* 🎁 通用彈窗樣式 */
     .popup-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background-color: rgba(0, 0, 0, 0.85); z-index: 2000; display: none; 
@@ -201,10 +202,7 @@
       display: flex; align-items: center; justify-content: space-between; gap: 12px;
     }
     .popup-card:hover { border-color: #ff4d4d; background: #0d0d0d; }
-    
-    .popup-card-thumb {
-      width: 70px; height: 55px; border-radius: 6px; object-fit: cover; flex-shrink: 0;
-    }
+    .popup-card-thumb { width: 70px; height: 55px; border-radius: 6px; object-fit: cover; flex-shrink: 0; }
     .popup-card-main { flex-grow: 1; }
     .popup-card-title { color: #fff; font-size: 0.95rem; font-weight: bold; line-height: 1.3; }
     .popup-card-price { color: #ff4d4d; font-size: 0.95rem; font-weight: bold; margin-top: 4px; }
@@ -213,20 +211,23 @@
       font-size: 0.8rem; font-weight: bold; white-space: nowrap; flex-shrink: 0;
     }
 
-    .popup-pkg-card {
-      flex-direction: column; align-items: stretch; gap: 8px; border-color: #554411;
-    }
-    .popup-pkg-header {
-      display: flex; justify-content: space-between; align-items: center;
-    }
+    .popup-pkg-card { flex-direction: column; align-items: stretch; gap: 8px; border-color: #554411; }
+    .popup-pkg-header { display: flex; justify-content: space-between; align-items: center; }
     .popup-pkg-title { color: #ffcc00; font-size: 1rem; font-weight: bold; }
     .popup-pkg-inner-box {
       background: #141414; border: 1px dashed #444; border-radius: 6px;
       padding: 8px 10px; font-size: 0.82rem; color: #ccc; line-height: 1.45;
     }
-    .popup-pkg-bottom {
-      display: flex; justify-content: space-between; align-items: center; margin-top: 2px;
+    .popup-pkg-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 2px; }
+
+    /* 🎁 自選禮兌換視窗專用樣式 */
+    .reward-select-item {
+      background: #222; border: 1px solid #444; border-radius: 8px;
+      padding: 10px 12px; display: flex; align-items: center; justify-content: space-between;
     }
+    .reward-item-meta { text-align: left; flex-grow: 1; padding-right: 10px; }
+    .reward-item-name { font-size: 0.95rem; font-weight: bold; color: #fff; }
+    .reward-item-rate { font-size: 0.78rem; color: #ffcc00; margin-top: 2px; }
 
     /* 🛒 購物車視窗樣式 */
     .cart-modal-content {
@@ -280,12 +281,31 @@
 </head>
 <body>
 
-  <!-- 🎁 動態彈出廣告視窗 -->
+  <!-- 🎁 動態特惠推薦廣告視窗 -->
   <div class="popup-overlay" id="popup-overlay">
     <div class="popup-content">
       <div class="popup-close" onclick="closePopup()">✖</div>
       <div class="popup-title">🔥 限時特選推薦</div>
       <div class="popup-items-wrapper" id="popup-items-wrapper"></div>
+    </div>
+  </div>
+
+  <!-- 🎁 自選禮兌換挑選視窗 -->
+  <div class="popup-overlay" id="reward-select-modal" style="z-index: 2200;">
+    <div class="popup-content" style="max-width: 480px; padding: 20px;">
+      <div class="popup-close" onclick="closeRewardSelectModal()">✖</div>
+      <div class="popup-title" style="color:#ffcc00; margin-bottom:4px;">🎁 滿額自選禮兌換池</div>
+      
+      <div style="font-size:0.85rem; color:#aaa; margin-bottom:12px;">
+        目前擁有：<span id="modal-total-pts" style="color:#28a745; font-weight:bold; font-size:1.1rem;">0</span> 點 | 
+        已使用：<span id="modal-used-pts" style="color:#ff4d4d; font-weight:bold; font-size:1.1rem;">0</span> 點
+      </div>
+
+      <div class="popup-items-wrapper" id="reward-options-container" style="max-height: 52vh; margin-bottom: 12px;"></div>
+
+      <button class="btn-primary" style="width:100%; padding:12px; font-size:1rem;" onclick="closeRewardSelectModal()">
+        ✅ 完成挑選
+      </button>
     </div>
   </div>
 
@@ -319,7 +339,10 @@
       <div id="cart-step-1">
         <div class="popup-title" style="color: #06C755; margin-bottom: 10px;">🛒 購物清單確認 (1/2)</div>
         <div class="cart-items-container" id="cart-items-container"></div>
-        <div id="cart-reward-hint" style="font-size: 0.9rem; color: #ffcc00; margin-bottom: 6px;"></div>
+        
+        <!-- 自選禮快捷提示區 -->
+        <div id="cart-reward-hint" style="font-size: 0.88rem; color: #ffcc00; margin-bottom: 8px; background:#222; padding:8px 10px; border-radius:6px; border:1px solid #444;"></div>
+        
         <div class="cart-total">總金額：<span id="cart-total-price">NT$0</span></div>
         <button class="btn-primary" style="width: 100%; padding: 14px; font-size: 1.1rem;" onclick="goToCartStep2()">
           下一步：填寫備註資訊 ➔
@@ -358,10 +381,10 @@
   <div class="category-nav" id="category-nav"></div> 
   <div class="container" id="product-container"></div>
 
-  <!-- 🎁 獨立滿額禮進度膠囊 (倍數累贈計算) -->
-  <div class="bottom-reward-pill" id="bottom-reward-pill">
+  <!-- 🎁 獨立滿額自選禮膠囊 -->
+  <div class="bottom-reward-pill" id="bottom-reward-pill" onclick="openRewardSelectModal()">
     <div class="bottom-reward-text-row">
-      <span id="bottom-reward-title" style="font-weight:bold; color:#ffcc00;">滿額禮</span>
+      <span id="bottom-reward-title" style="font-weight:bold; color:#ffcc00;">🎁 滿額自選禮</span>
       <span id="bottom-reward-status">差$0</span>
     </div>
     <div class="bottom-reward-progress-bg">
@@ -374,7 +397,7 @@
     🛒 已選取 <span id="cart-count">0</span> 項（NT$0）
   </div>
 
-  <!-- 🚀 右側直立工具群組 (置頂按鈕在上，LINE在最下方) -->
+  <!-- 🚀 右側直立工具群組 -->
   <div class="floating-tools" id="floating-tools">
     <div class="tool-btn" id="scroll-top-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="回到頂部">⬆️</div>
     <a href="#" target="_blank" class="tool-btn line-btn" id="line-link-btn" title="加 LINE 好友">💬</a>
@@ -386,6 +409,8 @@
     let products = [];
     let siteSettings = {};
     const selectedItems = {}; 
+    const selectedRewards = {}; // 記錄已挑選的自選禮 { "品項名": 兌換份數 }
+    let parsedRewardPool = [];  // 解析後的自選禮池 [{ name, rate, ptsPerUnit }]
     let currentCategory = '全部'; 
     let hasShownAdThisLoad = false; 
 
@@ -412,12 +437,13 @@
     }
 
     async function loadProducts() {
-      const cachedData = localStorage.getItem('fong_cache_v15');
+      const cachedData = localStorage.getItem('fong_cache_v16');
       if (cachedData) {
         try {
           const parsed = JSON.parse(cachedData);
           products = parsed.products;
           siteSettings = parsed.settings || {};
+          parseRewardPool(siteSettings['滿額贈品']);
           updateSettingsUI(siteSettings);
           document.getElementById('loading').style.display = 'none';
           
@@ -459,9 +485,9 @@
           if (detail) {
             const parts = detail.split(/[,，、]/).map(s => s.trim()).filter(s => s);
             parts.forEach(pStr => {
-              const match = pStr.match(/^(.*?)\s*[*xX]\s*(\d+)$/);
+              const match = pStr.match(/^(.*?)\s*[*xX]\s*(\d+(\.\d+)?)$/);
               const pName = match ? match[1].trim() : pStr;
-              const pQty = match ? parseInt(match[2]) : 1;
+              const pQty = match ? parseFloat(match[2]) : 1;
               const target = freshProducts.find(p => p.title === pName);
               if (target) {
                 const singlePrice = parseInt(target.originalPrice) || parseInt(target.specialPrice) || 0;
@@ -487,9 +513,10 @@
         const freshDataStr = JSON.stringify(freshData);
         
         if (freshDataStr !== cachedData) {
-          localStorage.setItem('fong_cache_v15', freshDataStr);
+          localStorage.setItem('fong_cache_v16', freshDataStr);
           products = freshProducts;
           siteSettings = data.settings || {};
+          parseRewardPool(siteSettings['滿額贈品']);
           updateSettingsUI(siteSettings);
           document.getElementById('loading').style.display = 'none';
           
@@ -502,6 +529,23 @@
         console.error('背景同步失敗:', error);
         if (!cachedData) document.getElementById('loading').innerText = '商品載入失敗，請檢查網路連線。';
       }
+    }
+
+    // 解析後台「滿額贈品」點數池 (例：手持仙女棒*2, 雙泡泡小高空*1, 豪華大高空*0.5)
+    function parseRewardPool(settingStr) {
+      parsedRewardPool = [];
+      if (!settingStr) return;
+      const parts = settingStr.split(/[,，、]/).map(s => s.trim()).filter(s => s);
+      parts.forEach(str => {
+        const match = str.match(/^(.*?)\s*[*xX]\s*(\d+(\.\d+)?)$/);
+        const name = match ? match[1].trim() : str;
+        const rate = match ? parseFloat(match[2]) : 1; // 1 點可換幾份 (rate = 2 => 1點2份；rate = 0.5 => 1份要2點)
+        parsedRewardPool.push({
+          name: name,
+          rate: rate,
+          ptsPerUnit: 1 / rate // 每份需要幾點
+        });
+      });
     }
 
     function updateSettingsUI(settings) {
@@ -525,7 +569,6 @@
           const wrapper = document.getElementById('popup-items-wrapper');
           wrapper.innerHTML = featuredProducts.map(fp => {
             const p = fp.product;
-            
             if (p.isPackage && p.packageDetail) {
               const listItems = p.packageDetail.split(/[,，、]/).map(s => `• ${s.trim()}`).join('<br>');
               return `
@@ -544,8 +587,7 @@
                   </div>
                 </div>
               `;
-            } 
-            else if (p.image) {
+            } else if (p.image) {
               return `
                 <div class="popup-card" onclick="handleAdClick('${p.title}')">
                   <img src="${p.image}" class="popup-card-thumb" alt="${p.title}">
@@ -556,8 +598,7 @@
                   <div class="popup-card-action">選購 ➔</div>
                 </div>
               `;
-            } 
-            else {
+            } else {
               return `
                 <div class="popup-card" onclick="handleAdClick('${p.title}')">
                   <div class="popup-card-main">
@@ -691,7 +732,7 @@
         if (item.isPackage && item.packageDetail) {
           const parts = item.packageDetail.split(/[,，、]/).map(s => s.trim()).filter(s => s);
           const tagsHtml = parts.map(pStr => {
-            const match = pStr.match(/^(.*?)\s*[*xX]\s*(\d+)$/);
+            const match = pStr.match(/^(.*?)\s*[*xX]\s*(\d+(\.\d+)?)$/);
             const pName = match ? match[1].trim() : pStr;
             const pQty = match ? match[2] : '1';
             return `
@@ -799,6 +840,19 @@
       return total;
     }
 
+    // 計算已使用的自選禮點數
+    function getUsedRewardPoints() {
+      let usedPts = 0;
+      for (let name in selectedRewards) {
+        const qty = selectedRewards[name];
+        const item = parsedRewardPool.find(r => r.name === name);
+        if (item) {
+          usedPts += qty * item.ptsPerUnit;
+        }
+      }
+      return parseFloat(usedPts.toFixed(2));
+    }
+
     function updateCartUI() {
       const count = Object.keys(selectedItems).length;
       const cartBtn = document.getElementById('floating-cart');
@@ -812,33 +866,116 @@
         cartBtn.style.display = 'none';
       }
 
-      // 🎁 倍數累贈計算邏輯
+      // 滿額自選禮膠囊連動
       const threshold = parseInt(siteSettings['滿額門檻']) || 0;
-      const giftName = siteSettings['滿額贈品'] || '';
-
-      if (count > 0 && threshold > 0 && giftName) {
+      if (count > 0 && threshold > 0 && parsedRewardPool.length > 0) {
         rewardPill.style.display = 'flex';
         
-        const earnedQty = Math.floor(totalPrice / threshold);
+        const earnedPts = Math.floor(totalPrice / threshold);
+        const usedPts = getUsedRewardPoints();
         const currentLevelProgress = totalPrice % threshold;
         const percent = Math.min(100, Math.floor((currentLevelProgress / threshold) * 100));
         const neededForNext = threshold - currentLevelProgress;
 
-        document.getElementById('bottom-reward-bar').style.width = (earnedQty > 0 && currentLevelProgress === 0 ? 100 : percent) + '%';
-        document.getElementById('bottom-reward-title').innerText = `🎁 滿 NT$${threshold} 送「${giftName}」`;
+        document.getElementById('bottom-reward-bar').style.width = (earnedPts > 0 && currentLevelProgress === 0 ? 100 : percent) + '%';
         
-        if (earnedQty > 0) {
+        if (earnedPts > 0) {
+          document.getElementById('bottom-reward-title').innerText = `🎁 自選禮 (${usedPts}/${earnedPts}點)`;
           if (neededForNext === threshold) {
-            document.getElementById('bottom-reward-status').innerHTML = `<span style="color:#28a745; font-weight:bold;">🎉 已獲 ${earnedQty} 份贈品！</span>`;
+            document.getElementById('bottom-reward-status').innerHTML = `<span style="color:#28a745; font-weight:bold;">點此挑選 ➔</span>`;
           } else {
-            document.getElementById('bottom-reward-status').innerHTML = `<span style="color:#28a745; font-weight:bold;">已獲 ${earnedQty} 份</span>，差 $${neededForNext} 再送`;
+            document.getElementById('bottom-reward-status').innerHTML = `差 $${neededForNext} 再送點數`;
           }
         } else {
+          document.getElementById('bottom-reward-title').innerText = `🎁 滿額自選禮`;
           document.getElementById('bottom-reward-status').innerHTML = `差 <strong>NT$${neededForNext}</strong>`;
         }
       } else {
         rewardPill.style.display = 'none';
       }
+    }
+
+    // 🎁 開啟自選禮兌換視窗
+    function openRewardSelectModal() {
+      const totalPrice = calculateCartTotal();
+      const threshold = parseInt(siteSettings['滿額門檻']) || 0;
+      const earnedPts = Math.floor(totalPrice / threshold);
+      const usedPts = getUsedRewardPoints();
+
+      document.getElementById('modal-total-pts').innerText = earnedPts;
+      document.getElementById('modal-used-pts').innerText = usedPts;
+
+      const container = document.getElementById('reward-options-container');
+      container.innerHTML = '';
+
+      if (parsedRewardPool.length === 0) {
+        container.innerHTML = '<div style="color:#888; padding:20px;">尚未設定自選禮品項</div>';
+      } else {
+        parsedRewardPool.forEach(item => {
+          const qty = selectedRewards[item.name] || 0;
+          let rateDesc = '';
+          if (item.rate === 1) rateDesc = '消耗 1 點 / 換 1 份';
+          else if (item.rate > 1) rateDesc = `消耗 1 點 / 可換 ${item.rate} 份 (超值小禮)`;
+          else rateDesc = `消耗 ${1/item.rate} 點 / 換 1 份 (高級好禮)`;
+
+          container.innerHTML += `
+            <div class="reward-select-item">
+              <div class="reward-item-meta">
+                <div class="reward-item-name" style="cursor:pointer;" onclick="openSingleProductDetail('${item.name}')">
+                  ${item.name} <span class="view-badge">🔍 詳情</span>
+                </div>
+                <div class="reward-item-rate">${rateDesc}</div>
+              </div>
+              <div class="quantity-control" style="margin-bottom:0;">
+                <div class="qty-btn" style="width:28px; height:28px;" onclick="changeRewardQty('${item.name}', -1)">-</div>
+                <span class="qty-number" id="reward-qty-${item.name}" style="min-width:20px;">${qty}</span>
+                <div class="qty-btn" style="width:28px; height:28px;" onclick="changeRewardQty('${item.name}', 1)">+</div>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      document.getElementById('reward-select-modal').style.display = 'flex';
+    }
+
+    function closeRewardSelectModal() {
+      document.getElementById('reward-select-modal').style.display = 'none';
+      updateCartUI();
+      if (document.getElementById('cart-modal-overlay').style.display === 'flex') {
+        renderCartItems();
+      }
+    }
+
+    function changeRewardQty(name, delta) {
+      const totalPrice = calculateCartTotal();
+      const threshold = parseInt(siteSettings['滿額門檻']) || 0;
+      const earnedPts = Math.floor(totalPrice / threshold);
+      const item = parsedRewardPool.find(r => r.name === name);
+      if (!item) return;
+
+      const currentQty = selectedRewards[name] || 0;
+      const newQty = currentQty + delta;
+      if (newQty < 0) return;
+
+      // 檢查增加數量後是否點數超額
+      const currentUsed = getUsedRewardPoints();
+      const pointChange = delta * item.ptsPerUnit;
+      if (delta > 0 && (currentUsed + pointChange) > earnedPts + 0.001) {
+        alert(`自選禮點數不足！您目前共擁有 ${earnedPts} 點，請先湊滿更高金額或減少其他贈品。`);
+        return;
+      }
+
+      if (newQty === 0) {
+        delete selectedRewards[name];
+      } else {
+        selectedRewards[name] = newQty;
+      }
+
+      const qtySpan = document.getElementById(`reward-qty-${name}`);
+      if (qtySpan) qtySpan.innerText = newQty;
+      document.getElementById('modal-used-pts').innerText = getUsedRewardPoints();
+      updateCartUI();
     }
 
     function openCartModal() {
@@ -898,19 +1035,28 @@
 
       document.getElementById('cart-total-price').innerText = `NT$${totalPrice}`;
 
-      // 購物車內的滿額倍數提示
+      // 自選禮提示與選取明細
       const threshold = parseInt(siteSettings['滿額門檻']) || 0;
-      const giftName = siteSettings['滿額贈品'] || '';
       const rewardHint = document.getElementById('cart-reward-hint');
-      if (threshold && giftName) {
-        const earnedQty = Math.floor(totalPrice / threshold);
-        const currentLevelProgress = totalPrice % threshold;
-        const neededForNext = threshold - currentLevelProgress;
+      if (threshold && parsedRewardPool.length > 0) {
+        const earnedPts = Math.floor(totalPrice / threshold);
+        const usedPts = getUsedRewardPoints();
+        const neededForNext = threshold - (totalPrice % threshold);
 
-        if (earnedQty > 0) {
-          rewardHint.innerHTML = `🎉 已達滿額門檻！將加贈：<strong>${giftName} x ${earnedQty}</strong>（再湊 NT$${neededForNext} 再送一份！）`;
+        let chosenListStr = Object.keys(selectedRewards).map(k => `${k} x ${selectedRewards[k]}`).join('、');
+        
+        if (earnedPts > 0) {
+          rewardHint.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span>🎉 可選贈品：<strong>${earnedPts} 點</strong> (已用 ${usedPts} 點)</span>
+              <button onclick="openRewardSelectModal()" style="background:#ffcc00; color:#000; border:none; border-radius:4px; padding:3px 8px; font-size:0.75rem; font-weight:bold; cursor:pointer;">
+                ${chosenListStr ? '修改自選禮 ➔' : '點此挑選自選禮 ➔'}
+              </button>
+            </div>
+            ${chosenListStr ? `<div style="color:#28a745; font-size:0.8rem; margin-top:4px;">🎁 目前已選：${chosenListStr}</div>` : `<div style="color:#ff4d4d; font-size:0.8rem; margin-top:4px;">⚠️ 尚未挑選自選禮，可點上方按鈕自選！</div>`}
+          `;
         } else {
-          rewardHint.innerHTML = `💡 還差 NT$${neededForNext} 即贈送「${giftName}」！`;
+          rewardHint.innerHTML = `💡 還差 NT$${neededForNext} 即可獲得 1 點自選好禮！`;
         }
       } else {
         rewardHint.innerHTML = '';
@@ -946,8 +1092,6 @@
       const custName = document.getElementById('order-customer-name').value.trim();
       const custNote = document.getElementById('order-customer-note').value.trim();
       const totalPrice = calculateCartTotal();
-      const threshold = parseInt(siteSettings['滿額門檻']) || 0;
-      const giftName = siteSettings['滿額贈品'] || '';
 
       let message = "你好！我想預訂以下煙火商品：\n------------------------\n";
       
@@ -961,9 +1105,12 @@
       message += "------------------------\n";
       message += `💰 預估總金額：NT$${totalPrice}\n`;
 
-      if (threshold && totalPrice >= threshold && giftName) {
-        const earnedQty = Math.floor(totalPrice / threshold);
-        message += `🎁 滿額贈品：${giftName} x ${earnedQty}\n`;
+      // 格式化自選禮至 LINE 訊息
+      if (Object.keys(selectedRewards).length > 0) {
+        message += "🎁 滿額自選贈品：\n";
+        for (let rName in selectedRewards) {
+          message += `  - ${rName} x ${selectedRewards[rName]}\n`;
+        }
       }
 
       if (custName) {
