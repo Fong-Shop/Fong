@@ -15,7 +15,9 @@
     * { box-sizing: border-box; }
     body {
       font-family: Arial, sans-serif; background-color: #f4f4f4;
-      margin: 0; padding: 20px 20px 100px 20px;
+      margin: 0; 
+      /* 增加底部留白至 220px，確保滑到最底時不被浮動按鈕遮擋 */
+      padding: 20px 20px 220px 20px;
       display: flex; flex-direction: column; align-items: center;
     }
     .announcement {
@@ -188,7 +190,6 @@
     .popup-item img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 6px; }
     .popup-item-title { color: #fff; font-size: 0.95rem; font-weight: bold; margin-top: 8px; }
 
-    /* 🎁 彈窗套裝內容清單樣式 */
     .popup-package-box {
       background: #111; border: 1px dashed #ffcc00; border-radius: 6px;
       padding: 10px 8px; margin: 8px 0; text-align: left;
@@ -377,7 +378,7 @@
     }
 
     async function loadProducts() {
-      const cachedData = localStorage.getItem('fong_cache_v9');
+      const cachedData = localStorage.getItem('fong_cache_v10');
       if (cachedData) {
         try {
           const parsed = JSON.parse(cachedData);
@@ -452,7 +453,7 @@
         const freshDataStr = JSON.stringify(freshData);
         
         if (freshDataStr !== cachedData) {
-          localStorage.setItem('fong_cache_v9', freshDataStr);
+          localStorage.setItem('fong_cache_v10', freshDataStr);
           products = freshProducts;
           siteSettings = data.settings || {};
           updateSettingsUI(siteSettings);
@@ -490,8 +491,6 @@
           const popupGrid = document.getElementById('popup-grid');
           popupGrid.innerHTML = featuredProducts.map(fp => {
             const p = fp.product;
-            
-            // 情況 1：有獨立圖片，展示圖片卡片
             if (p.image) {
               return `
                 <div class="popup-item" onclick="handleAdClick('${p.title}')">
@@ -500,9 +499,7 @@
                   ${p.specialPrice ? `<div style="color:#ff4d4d; font-size:0.9rem; font-weight:bold; margin-top:4px;">特價 NT$${p.specialPrice}</div>` : ''}
                 </div>
               `;
-            } 
-            // 情況 2：屬於套裝且無圖片，展示精美內含品項清單
-            else if (p.isPackage && p.packageDetail) {
+            } else if (p.isPackage && p.packageDetail) {
               const listItems = p.packageDetail.split(/[,，、]/).map(s => `• ${s.trim()}`).join('<br>');
               return `
                 <div class="popup-item" onclick="handleAdClick('${p.title}')">
@@ -517,9 +514,7 @@
                   <div class="popup-pkg-price">特價 NT$${p.specialPrice}</div>
                 </div>
               `;
-            } 
-            // 情況 3：一般單品無圖片
-            else {
+            } else {
               return `
                 <div class="popup-item popup-item-noimg" onclick="handleAdClick('${p.title}')">
                   <div style="font-size:0.8rem; color:#aaa;">🔥 熱銷推薦</div>
