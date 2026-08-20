@@ -15,7 +15,9 @@
     * { box-sizing: border-box; }
     body {
       font-family: Arial, sans-serif; background-color: #f4f4f4;
-      margin: 0; padding: 20px 20px 140px 20px;
+      margin: 0; 
+      /* 增加底部留白至 260px，確保滑到最底時不被浮動按鈕遮擋 */
+      padding: 20px 20px 260px 20px;
       display: flex; flex-direction: column; align-items: center;
     }
     .announcement {
@@ -49,7 +51,7 @@
       display: flex; flex-direction: column; transition: box-shadow 0.3s ease;
     }
 
-    .media-container { position: relative; width: 100%; height: 250px; cursor: pointer; background-color: #222; }
+    .media-container { position: relative; width: 100%; height: 220px; cursor: pointer; background-color: #222; }
     .media-container img {
       width: 100%; height: 100%; object-fit: cover; position: absolute;
       top: 0; left: 0; z-index: 10; transition: opacity 0.3s;
@@ -170,23 +172,25 @@
       background: #181818; border-radius: 14px; border: 2px solid #ff4d4d;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6); padding: 22px 16px;
       animation: popIn 0.3s ease forwards; text-align: center;
-      display: flex; flex-direction: column; overflow: hidden;
+      display: flex; flex-direction: column;
+      /* 移除 overflow: hidden，避免外突的關閉叉叉按鈕被截斷 */
     }
     @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    
     .popup-close {
-      position: absolute; top: -12px; right: -12px; width: 34px; height: 34px; 
+      position: absolute; top: -14px; right: -14px; width: 36px; height: 36px; 
       background-color: #fff; color: #000; border-radius: 50%; display: flex; 
-      justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; 
-      cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.4); z-index: 2010; transition: transform 0.2s;
+      justify-content: center; align-items: center; font-size: 1.15rem; font-weight: bold; 
+      cursor: pointer; box-shadow: 0 3px 10px rgba(0,0,0,0.5); z-index: 2010; transition: transform 0.2s;
     }
     .popup-close:hover { transform: scale(1.15) rotate(90deg); }
     
     .popup-title { font-size: 1.25rem; font-weight: bold; color: #ffcc00; margin-bottom: 12px; }
     
-    /* 🎁 彈窗流暢直列排版 (解決手機端雙欄長短不一問題) */
+    /* 彈窗內容獨立滾動區塊 */
     .popup-items-wrapper {
       overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
-      padding-right: 4px; max-height: 68vh;
+      padding: 4px 4px 4px 0; max-height: 68vh;
     }
     .popup-items-wrapper::-webkit-scrollbar { width: 5px; }
     .popup-items-wrapper::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
@@ -198,7 +202,6 @@
     }
     .popup-card:hover { border-color: #ff4d4d; background: #0d0d0d; }
     
-    /* 單品帶圖風格 */
     .popup-card-thumb {
       width: 70px; height: 55px; border-radius: 6px; object-fit: cover; flex-shrink: 0;
     }
@@ -210,7 +213,6 @@
       font-size: 0.8rem; font-weight: bold; white-space: nowrap; flex-shrink: 0;
     }
 
-    /* 套裝展開卡片風格 */
     .popup-pkg-card {
       flex-direction: column; align-items: stretch; gap: 8px; border-color: #554411;
     }
@@ -408,7 +410,7 @@
     }
 
     async function loadProducts() {
-      const cachedData = localStorage.getItem('fong_cache_v11');
+      const cachedData = localStorage.getItem('fong_cache_v12');
       if (cachedData) {
         try {
           const parsed = JSON.parse(cachedData);
@@ -483,7 +485,7 @@
         const freshDataStr = JSON.stringify(freshData);
         
         if (freshDataStr !== cachedData) {
-          localStorage.setItem('fong_cache_v11', freshDataStr);
+          localStorage.setItem('fong_cache_v12', freshDataStr);
           products = freshProducts;
           siteSettings = data.settings || {};
           updateSettingsUI(siteSettings);
