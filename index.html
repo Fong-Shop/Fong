@@ -110,7 +110,7 @@
     .add-cart-btn:hover { background-color: #444; }
     .add-cart-btn.selected { background-color: #28a745; color: #fff; border-color: #28a745; }
 
-    /* 🎁 獨立滿額禮進度膠囊（置中浮動，可單獨調整寬度） */
+    /* 🎁 獨立滿額禮進度膠囊 */
     .bottom-reward-pill {
       position: fixed; bottom: 78px; left: 50%; transform: translateX(-50%);
       width: calc(100% - 90px); max-width: 300px;
@@ -141,7 +141,7 @@
     }
     .floating-cart:hover { transform: translateX(-50%) scale(1.02); }
 
-    /* 🚀 右側直立工具群組（抬高避開下方長條） */
+    /* 🚀 右側直立工具群組 */
     .floating-tools {
       position: fixed; bottom: 120px; right: 16px;
       display: flex; flex-direction: column; align-items: center;
@@ -358,7 +358,7 @@
   <div class="category-nav" id="category-nav"></div> 
   <div class="container" id="product-container"></div>
 
-  <!-- 🎁 獨立滿額禮進度膠囊 -->
+  <!-- 🎁 獨立滿額禮進度膠囊 (倍數累贈計算) -->
   <div class="bottom-reward-pill" id="bottom-reward-pill">
     <div class="bottom-reward-text-row">
       <span id="bottom-reward-title" style="font-weight:bold; color:#ffcc00;">滿額禮</span>
@@ -412,7 +412,7 @@
     }
 
     async function loadProducts() {
-      const cachedData = localStorage.getItem('fong_cache_v14');
+      const cachedData = localStorage.getItem('fong_cache_v15');
       if (cachedData) {
         try {
           const parsed = JSON.parse(cachedData);
@@ -487,7 +487,7 @@
         const freshDataStr = JSON.stringify(freshData);
         
         if (freshDataStr !== cachedData) {
-          localStorage.setItem('fong_cache_v14', freshDataStr);
+          localStorage.setItem('fong_cache_v15', freshDataStr);
           products = freshProducts;
           siteSettings = data.settings || {};
           updateSettingsUI(siteSettings);
@@ -812,21 +812,29 @@
         cartBtn.style.display = 'none';
       }
 
-      // 橫式滿額禮膠囊更新
+      // 🎁 倍數累贈計算邏輯
       const threshold = parseInt(siteSettings['滿額門檻']) || 0;
       const giftName = siteSettings['滿額贈品'] || '';
 
       if (count > 0 && threshold > 0 && giftName) {
         rewardPill.style.display = 'flex';
-        const percent = Math.min(100, Math.floor((totalPrice / threshold) * 100));
-        document.getElementById('bottom-reward-bar').style.width = percent + '%';
         
+        const earnedQty = Math.floor(totalPrice / threshold);
+        const currentLevelProgress = totalPrice % threshold;
+        const percent = Math.min(100, Math.floor((currentLevelProgress / threshold) * 100));
+        const neededForNext = threshold - currentLevelProgress;
+
+        document.getElementById('bottom-reward-bar').style.width = (earnedQty > 0 && currentLevelProgress === 0 ? 100 : percent) + '%';
         document.getElementById('bottom-reward-title').innerText = `🎁 滿 NT$${threshold} 送「${giftName}」`;
         
-        if (totalPrice >= threshold) {
-          document.getElementById('bottom-reward-status').innerHTML = `<span style="color:#28a745; font-weight:bold;">富貴花開</span>`;
+        if (earnedQty > 0) {
+          if (neededForNext === threshold) {
+            document.getElementById('bottom-reward-status').innerHTML = `<span style="color:#28a745; font-weight:bold;">🎉 已獲 ${earnedQty} 份贈品！</span>`;
+          } else {
+            document.getElementById('bottom-reward-status').innerHTML = `<span style="color:#28a745; font-weight:bold;">已獲 ${earnedQty} 份</span>，差 $${neededForNext} 再送`;
+          }
         } else {
-          document.getElementById('bottom-reward-status').innerHTML = `差 <strong>NT$${threshold - totalPrice}</strong>`;
+          document.getElementById('bottom-reward-status').innerHTML = `差 <strong>NT$${neededForNext}</strong>`;
         }
       } else {
         rewardPill.style.display = 'none';
@@ -890,14 +898,19 @@
 
       document.getElementById('cart-total-price').innerText = `NT$${totalPrice}`;
 
+      // 購物車內的滿額倍數提示
       const threshold = parseInt(siteSettings['滿額門檻']) || 0;
       const giftName = siteSettings['滿額贈品'] || '';
       const rewardHint = document.getElementById('cart-reward-hint');
       if (threshold && giftName) {
-        if (totalPrice >= threshold) {
-          rewardHint.innerHTML = `🎉 已達滿額門檻！訂單將加贈：<strong>${giftName}</strong>`;
+        const earnedQty = Math.floor(totalPrice / threshold);
+        const currentLevelProgress = totalPrice % threshold;
+        const neededForNext = threshold - currentLevelProgress;
+
+        if (earnedQty > 0) {
+          rewardHint.innerHTML = `🎉 已達滿額門檻！將加贈：<strong>${giftName} x ${earnedQty}</strong>（再湊 NT$${neededForNext} 再送一份！）`;
         } else {
-          rewardHint.innerHTML = `💡 還差 NT$${threshold - totalPrice} 即贈送「${giftName}」！`;
+          rewardHint.innerHTML = `💡 還差 NT$${neededForNext} 即贈送「${giftName}」！`;
         }
       } else {
         rewardHint.innerHTML = '';
@@ -949,7 +962,8 @@
       message += `💰 預估總金額：NT$${totalPrice}\n`;
 
       if (threshold && totalPrice >= threshold && giftName) {
-        message += `🎁 滿額贈品：${giftName}\n`;
+        const earnedQty = Math.floor(totalPrice / threshold);
+        message += `🎁 滿額贈品：${giftName} x ${earnedQty}\n`;
       }
 
       if (custName) {
