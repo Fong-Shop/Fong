@@ -14,9 +14,16 @@
       width: 100%; max-width: 600px; background: #1e1e1e; border-radius: 12px;
       padding: 20px; border: 1px solid #333; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     }
-    h2 { color: #ffcc00; margin-top: 0; text-align: center; font-size: 1.3rem; }
     
-    .tab-row { display: flex; gap: 8px; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+    .admin-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px;
+      flex-wrap: wrap; gap: 8px;
+    }
+    .admin-header h2 { margin: 0; color: #ffcc00; font-size: 1.2rem; }
+    .admin-header-actions { font-size: 0.85rem; color: #888; }
+
+    .tab-row { display: flex; gap: 8px; margin-bottom: 15px; }
     .tab-btn {
       flex: 1; padding: 10px; background: #2a2a2a; color: #ccc; border: 1px solid #444;
       border-radius: 6px; cursor: pointer; font-weight: bold; text-align: center;
@@ -61,7 +68,7 @@
   <!-- 🔐 登入驗證視窗 -->
   <div id="login-overlay">
     <div class="admin-card" style="text-align: center;">
-      <h2>🔑 請輸入後台管理密碼</h2>
+      <h2 style="color:#ffcc00; margin-top:0;">🔑 請輸入後台管理密碼</h2>
       <div class="form-group" style="margin-top: 15px;">
         <input type="password" id="admin-pass-input" placeholder="請輸入管理密碼">
       </div>
@@ -70,12 +77,13 @@
     </div>
   </div>
 
+  <!-- 主管理卡片 -->
   <div class="admin-card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-      <h2 style="margin:0;">🛠️ FONG 煙火管理後台</h2>
-      <div>
+    <div class="admin-header">
+      <h2>🛠️ FONG 煙火管理後台</h2>
+      <div class="admin-header-actions">
         <span class="logout-link" onclick="logoutAdmin()">🔓 登出</span> | 
-        <a href="index.html" style="color:#ffcc00; text-decoration:none; font-size:0.85rem;">⬅ 回前台</a>
+        <a href="index.html" style="color:#ffcc00; text-decoration:none; font-size:0.85rem; font-weight:bold;">⬅ 回前台</a>
       </div>
     </div>
 
@@ -415,6 +423,7 @@
       try {
         const res = await fetch(GAS_API_URL, {
           method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({
             adminKey: adminKey,
             action: "uploadImage",
@@ -455,6 +464,7 @@
       try {
         const res = await fetch(GAS_API_URL, {
           method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({ adminKey: adminKey, action: "saveProduct", product: p })
         });
         const result = await res.json();
@@ -482,6 +492,7 @@
       try {
         const res = await fetch(GAS_API_URL, {
           method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({ adminKey: adminKey, action: "savePackage", package: pkg })
         });
         const result = await res.json();
@@ -506,6 +517,7 @@
       try {
         const res = await fetch(GAS_API_URL, {
           method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({ adminKey: adminKey, action: "saveSettings", settings: s })
         });
         const result = await res.json();
