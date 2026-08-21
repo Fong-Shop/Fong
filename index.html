@@ -322,8 +322,8 @@
 </head>
 <body>
 
-  <!-- 🎇 頂部品牌 Header / LOGO (連點 5 下直達後台) -->
-  <header class="brand-header" onclick="handleLogoClick()">
+  <!-- 🎇 頂部品牌 Header / LOGO (點擊 5 下觸發秘密後台) -->
+  <header class="brand-header" id="brand-header-logo" onclick="handleLogoClick()">
     <div class="brand-logo-wrap">
       <h1 class="brand-title">✨ FONG 煙火精選 ✨</h1>
     </div>
@@ -378,27 +378,6 @@
       <button class="add-cart-btn selected" style="padding: 10px; background-color: #444; border:none;" onclick="closeDetailModal()">
         關閉預覽
       </button>
-    </div>
-  </div>
-
-  <!-- 💬 客製化系統提示彈窗 (替代原生 alert) -->
-  <div class="popup-overlay" id="custom-toast-modal" style="z-index: 3000;">
-    <div class="popup-content" style="max-width: 380px; padding: 20px; border-color: #ffcc00;">
-      <div class="popup-title" id="toast-title" style="color: #ffcc00;">💡 系統提示</div>
-      <div id="toast-message" style="font-size: 0.95rem; color: #ddd; margin: 15px 0; line-height: 1.5; white-space: pre-wrap;"></div>
-      <button class="btn-primary" onclick="closeToastModal()" style="width: 100%; padding: 10px;">確定</button>
-    </div>
-  </div>
-
-  <!-- ❓ 客製化確認選單彈窗 (替代原生 confirm) -->
-  <div class="popup-overlay" id="custom-confirm-modal" style="z-index: 3100;">
-    <div class="popup-content" style="max-width: 400px; padding: 20px; border-color: #ff9900;">
-      <div class="popup-title" style="color: #ffcc00;">💡 贈品尚未選滿</div>
-      <div id="confirm-message" style="font-size: 0.92rem; color: #ddd; margin: 15px 0; line-height: 1.5; text-align: left; white-space: pre-wrap;"></div>
-      <div class="btn-row">
-        <button class="btn-secondary" id="confirm-cancel-btn">點此挑選贈品</button>
-        <button class="btn-primary" id="confirm-ok-btn" style="background:#dc3545;">放棄贈品並結帳</button>
-      </div>
     </div>
   </div>
 
@@ -483,26 +462,17 @@
     const selectedRewards = {};
     let parsedRewardPool = [];
     let currentCategory = '全部'; 
-    let hasShownAdThisLoad = false;
+    let hasShownAdThisLoad = false; 
+
+    // 🔑 LOGO 點擊 5 下跳轉後台
     let logoClickCount = 0;
     let logoClickTimer = null;
-
-    function showToast(msg, title = "💡 系統提示") {
-      document.getElementById('toast-title').innerText = title;
-      document.getElementById('toast-message').innerText = msg;
-      document.getElementById('custom-toast-modal').style.display = 'flex';
-    }
-
-    function closeToastModal() {
-      document.getElementById('custom-toast-modal').style.display = 'none';
-    }
-
     function handleLogoClick() {
       logoClickCount++;
-      if (logoClickTimer) clearTimeout(logoClickTimer);
+      clearTimeout(logoClickTimer);
       if (logoClickCount >= 5) {
         logoClickCount = 0;
-        window.location.href = 'admin.html';
+        window.location.href = "admin.html";
       } else {
         logoClickTimer = setTimeout(() => { logoClickCount = 0; }, 1500);
       }
@@ -556,7 +526,7 @@
     }
 
     async function loadProducts() {
-      const cachedData = localStorage.getItem('fong_cache_v26');
+      const cachedData = localStorage.getItem('fong_cache_v25');
       if (cachedData) {
         try {
           const parsed = JSON.parse(cachedData);
@@ -578,18 +548,12 @@
         const response = await fetch(GAS_API_URL + cacheBuster, { cache: 'no-store' });
         const data = await response.json(); 
         
-        if (data.error) {
-          console.error("後端回傳錯誤：", data.error);
-          return;
-        }
-
         const freshProducts = [];
         const catalogItems = data.products || [];
         const packageItems = data.packages || [];
 
         packageItems.forEach(item => {
-          const title = item['商品名稱'] || item['套裝名稱'] || '';
-          if (!title) return;
+          if (!item['商品名稱']) return;
           const detail = item['包含內容'] || '';
           
           let calcOriginalPrice = 0;
@@ -599,7 +563,7 @@
               const match = pStr.match(/^(.*?)\s*[*xX]\s*(\d+(\.\d+)?)$/);
               const pName = match ? match[1].trim() : pStr;
               const pQty = match ? parseFloat(match[2]) : 1;
-              const target = catalogItems.find(p => (p['商品名稱'] || p.title) === pName);
+              const target = catalogItems.find(p => p['商品名稱'] === pName);
               if (target) {
                 const singlePrice = parseInt(target['原價']) || parseInt(target['特價']) || 0;
                 calcOriginalPrice += singlePrice * pQty;
@@ -608,7 +572,7 @@
           }
 
           freshProducts.push({
-            title: title,
+            title: item['商品名稱'] || '',
             image: formatImageUrl(item['圖片檔名'] || ''),
             youtube: item['影片網址'] || '',
             originalPrice: item['原價'] ? item['原價'] : (calcOriginalPrice > 0 ? calcOriginalPrice : ''),
@@ -621,10 +585,9 @@
         });
 
         catalogItems.forEach(item => {
-          const title = item['商品名稱'] || item.title || '';
-          if (!title) return;
+          if (!item['商品名稱']) return;
           freshProducts.push({
-            title: title,
+            title: item['商品名稱'] || '',
             image: formatImageUrl(item['圖片檔名'] || ''),
             youtube: item['影片網址'] || '',
             originalPrice: item['原價'] || '',
@@ -638,17 +601,19 @@
         const freshData = { products: freshProducts, settings: data.settings };
         const freshDataStr = JSON.stringify(freshData);
         
-        localStorage.setItem('fong_cache_v26', freshDataStr);
-        products = freshProducts;
-        siteSettings = data.settings || {};
-        parseRewardPool(siteSettings['滿額贈品']);
-        updateSettingsUI(siteSettings);
-        document.getElementById('loading').style.display = 'none';
-        
-        loadSavedCart();
-        renderCategories();
-        renderProducts();
-        updateCartUI();
+        if (freshDataStr !== cachedData) {
+          localStorage.setItem('fong_cache_v25', freshDataStr);
+          products = freshProducts;
+          siteSettings = data.settings || {};
+          parseRewardPool(siteSettings['滿額贈品']);
+          updateSettingsUI(siteSettings);
+          document.getElementById('loading').style.display = 'none';
+          
+          loadSavedCart();
+          renderCategories();
+          renderProducts();
+          updateCartUI();
+        }
       } catch (error) {
         console.error('背景同步失敗:', error);
         if (!cachedData) document.getElementById('loading').innerText = '商品載入失敗，請檢查網路連線。';
@@ -1094,7 +1059,7 @@
       const currentUsed = getUsedRewardPoints();
       const pointChange = delta * item.ptsPerUnit;
       if (delta > 0 && (currentUsed + pointChange) > earnedPts + 0.001) {
-        showToast(`自選禮點數不足！您目前共擁有 ${earnedPts} 點，請先湊滿更高金額或減少其他贈品。`, '🎁 點數不足');
+        alert(`自選禮點數不足！您目前共擁有 ${earnedPts} 點，請先湊滿更高金額或減少其他贈品。`);
         return;
       }
 
@@ -1138,29 +1103,14 @@
         const unUsedPts = parseFloat((earnedPts - usedPts).toFixed(2));
         
         if (unUsedPts > 0) {
-          const confirmModal = document.getElementById('custom-confirm-modal');
-          const confirmMsg = document.getElementById('confirm-message');
-          confirmMsg.innerText = `您目前還有 ${unUsedPts} 點滿額自選禮尚未挑選！\n\n您要現在前往挑選贈品，還是直接放棄剩餘贈品前往結帳？`;
-          
-          document.getElementById('confirm-cancel-btn').onclick = function() {
-            confirmModal.style.display = 'none';
+          const confirmLeave = confirm(`💡 提醒您：\n您目前還有 ${unUsedPts} 點滿額自選禮尚未挑選！\n\n按下【確定】放棄剩餘贈品，繼續前往結帳\n按下【取消】立即前往挑選贈品`);
+          if (!confirmLeave) {
             openRewardSelectModal();
-          };
-          
-          document.getElementById('confirm-ok-btn').onclick = function() {
-            confirmModal.style.display = 'none';
-            proceedToStep2(totalPrice);
-          };
-
-          confirmModal.style.display = 'flex';
-          return;
+            return;
+          }
         }
       }
 
-      proceedToStep2(totalPrice);
-    }
-
-    function proceedToStep2(totalPrice) {
       document.getElementById('cart-step2-total').innerText = `NT$${totalPrice}`;
       document.getElementById('cart-step-1').style.display = 'none';
       document.getElementById('cart-step-2').style.display = 'block';
