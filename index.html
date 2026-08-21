@@ -347,7 +347,7 @@
       <div class="media-container" id="detail-media-box" style="margin-bottom: 15px; border-radius: 8px; overflow: hidden; display:none;" onclick="playDetailVideo()">
         <img id="detail-img" src="" alt="商品圖片">
         <div class="play-button" id="detail-play-btn"></div>
-        <iframe id="detail-iframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        iframe id="detail-iframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
       </div>
       
       <div style="font-size: 0.95rem; color: #ccc; margin-bottom: 10px;">
@@ -449,19 +449,18 @@
       }
     }
 
-    // 🚀 全新相容的 Google Drive 直連轉換函式 (自動排除跨域封鎖)
     function formatImageUrl(rawUrl) {
       if (!rawUrl) return '';
       let url = rawUrl.toString().trim();
-      if (url.includes('drive.google.com') || url.includes('googleusercontent.com')) {
+      if (url.includes('drive.google.com')) {
         let fileId = '';
         if (url.includes('/d/')) {
-          fileId = url.split('/d/')[1].split('/')[0].split('?')[0].split('=')[0];
+          fileId = url.split('/d/')[1].split('/')[0].split('?')[0];
         } else if (url.includes('id=')) {
           fileId = url.split('id=')[1].split('&')[0];
         }
         if (fileId) {
-          return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+          return `https://drive.google.com/uc?export=view&id=${fileId}`;
         }
       }
       return url;
@@ -498,8 +497,10 @@
     }
 
     async function loadProducts() {
-      // 💡 提升快取號至 v28，強制清理舊快取並重新載入網址
-      const cachedData = localStorage.getItem('fong_cache_v28');
+      // 👁️ 紀錄前台訪客造訪與 IP
+      recordVisit('前台購物目錄');
+
+      const cachedData = localStorage.getItem('fong_cache_v27');
       if (cachedData) {
         try {
           const parsed = JSON.parse(cachedData);
@@ -581,7 +582,7 @@
         const freshData = { products: freshProducts, settings: data.settings };
         const freshDataStr = JSON.stringify(freshData);
         
-        localStorage.setItem('fong_cache_v28', freshDataStr);
+        localStorage.setItem('fong_cache_v27', freshDataStr);
         products = freshProducts;
         siteSettings = data.settings || {};
         parseRewardPool(siteSettings['滿額贈品']);
@@ -1211,6 +1212,8 @@
       if (custNote) {
         message += `📝 備註說明：${custNote}\n`;
       }
+
+      message += "\n請問目前都有現貨嗎？";
       
       const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(message)}`;
       window.location.href = lineUrl;
@@ -1226,6 +1229,24 @@
         scrollBtn.style.pointerEvents = 'none';
       }
     });
+
+    /* 👁️ 紀錄造訪與 IP */
+    async function recordVisit(sourceName) {
+      try {
+        let clientIp = "未知";
+        try {
+          const ipRes = await fetch("https://api.ipify.org?format=json");
+          const ipData = await ipRes.json();
+          clientIp = ipData.ip || "未知";
+        } catch (e) {}
+
+        fetch(GAS_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "logVisit", source: sourceName, ip: clientIp })
+        }).catch(() => {});
+      } catch (e) {}
+    }
 
     loadProducts();
   </script>
