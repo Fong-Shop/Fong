@@ -40,7 +40,6 @@
     textarea { resize: vertical; height: 75px; }
     input:disabled, textarea:disabled { background: #222; color: #888; cursor: not-allowed; }
 
-    /* 操作按鈕群 */
     .action-row { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 15px; }
     .btn-mini {
       padding: 6px 12px; background: #333; color: #fff; border: 1px solid #555;
@@ -102,7 +101,6 @@
     .modal-list::-webkit-scrollbar { width: 6px; }
     .modal-list::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
     
-    /* 💰 實時金額計算提示框 */
     .price-summary-badge {
       background: #252210; border: 1px solid #ffcc00; border-radius: 8px;
       padding: 10px; margin-bottom: 12px; text-align: center; font-size: 1rem;
@@ -167,7 +165,6 @@
         <h3 class="modal-title" id="ui-modal-title">編輯項目</h3>
         <div class="modal-close" onclick="closeUIModal()">×</div>
       </div>
-      <!-- 💰 動態計算顯示條 -->
       <div class="price-summary-badge" id="ui-price-summary">
         💰 目前組合內含單品原價總計：<span id="ui-total-val" style="font-size:1.2rem; color:#28a745;">NT$0</span>
       </div>
@@ -265,7 +262,7 @@
       <button class="btn-submit" id="btn-save-package" onclick="savePackage()">💾 儲存套裝</button>
     </div>
 
-    <!-- ⚙️ 3. 網站設定表單 -->
+    <!-- ⚙️ 3. 網站設定表單 (含訂單抬頭與結尾) -->
     <div id="sec-settings" style="display:none;">
       <div class="form-group"><label>📢 公告內容：</label><textarea id="set-announcement"></textarea></div>
       <div class="form-group"><label>💬 LINE 連結：</label><input type="text" id="set-line"></div>
@@ -279,12 +276,22 @@
         <label>🔥 主打推播：<button class="btn-action" onclick="openFeaturedEditor()">✏️ 勾選主打</button></label>
         <textarea id="set-featured" disabled></textarea>
       </div>
+      
+      <!-- 💬 訂單抬頭與訂單結尾動態設定 -->
+      <div class="form-group">
+        <label>💬 訂單抬頭 (送至LINE的開頭)：</label>
+        <input type="text" id="set-order-header" placeholder="例如：想訂購以下商品：">
+      </div>
+      <div class="form-group">
+        <label>🎁 訂單結尾 (含活動/目錄連結)：</label>
+        <textarea id="set-order-footer" placeholder="例如：🔗 商品目錄：https://fong-shop.github.io/Fong/&#10;🎁【好友分享禮】：出示分享截圖即贈專業噴槍！&#10;&#10;請問目前都有現貨嗎？"></textarea>
+      </div>
+
       <button class="btn-submit" id="btn-save-set" onclick="saveSettings()">💾 儲存設定</button>
     </div>
 
   </div>
 
-  <!-- 📷 分離的拍照與選圖檔案選擇器 -->
   <input type="file" id="camera-file-input" accept="image/*" capture="environment" style="display: none;" onchange="handleCameraUpload(this)">
   <input type="file" id="gallery-file-input" accept="image/*" style="display: none;" onchange="handleCameraUpload(this)">
 
@@ -328,7 +335,6 @@
     .catch(() => alert("網路連線錯誤，請檢查 API 設定"));
   }
 
-  /* 👁️ 紀錄後台造訪與 IP */
   async function recordVisit(sourceName) {
     try {
       let clientIp = "未知";
@@ -390,7 +396,6 @@
     document.getElementById(`sec-${tab}`).style.display = 'block';
   }
 
-  // 💡 計算組合套裝內容的原價總和
   function calculateDetailTotalSum(detailStr) {
     if (!detailStr) return 0;
     let sum = 0;
@@ -408,7 +413,6 @@
     return sum;
   }
 
-  /* --- 表單資料填寫 --- */
   function fillProductForm() {
     const idx = document.getElementById('select-product').value;
     const delBtn = document.getElementById('btn-del-product');
@@ -461,9 +465,10 @@
     document.getElementById('set-threshold').value = s['滿額門檻'] || '';
     document.getElementById('set-rewards').value = s['滿額贈品'] || '';
     document.getElementById('set-featured').value = s['主打商品'] || '';
+    document.getElementById('set-order-header').value = s['訂單抬頭'] || '';
+    document.getElementById('set-order-footer').value = s['訂單結尾'] || '';
   }
 
-  /* --- 📷 拍照 / 🖼️ 選圖 --- */
   function triggerPhoto(mode, targetInputId) {
     currentUploadTarget = targetInputId;
     if (mode === 'camera') {
@@ -589,14 +594,15 @@
           'LINE連結': document.getElementById('set-line').value.trim(),
           '滿額門檻': document.getElementById('set-threshold').value.trim(),
           '滿額贈品': document.getElementById('set-rewards').value.trim(),
-          '主打商品': document.getElementById('set-featured').value.trim()
+          '主打商品': document.getElementById('set-featured').value.trim(),
+          '訂單抬頭': document.getElementById('set-order-header').value.trim(),
+          '訂單結尾': document.getElementById('set-order-footer').value.trim()
         }
       });
       alert(res.message); if (res.success) loadAllData();
     } catch(e) {} finally { document.getElementById('btn-save-set').innerText = '💾 儲存設定'; }
   }
 
-  /* --- 🔃 拖曳與排序模式 --- */
   function closeUIModal() { 
     document.getElementById('ui-price-summary').style.display = 'none';
     document.getElementById('ui-modal').style.display = 'none'; 
@@ -721,7 +727,6 @@
     }
   }
 
-  /* --- 🎨 視覺化選擇器 --- */
   function parseCurrentStr(str, isPoints = false) {
     const dict = {};
     if (!str) return dict;
@@ -852,7 +857,6 @@
       const detailStr = resultArr.join(', ');
       document.getElementById('pkg-detail').value = detailStr;
       
-      // 💡 點擊確認後，自動將算出的總額帶入表單的原價欄位
       const calculatedSum = calculateDetailTotalSum(detailStr);
       document.getElementById('pkg-originalPrice').value = calculatedSum > 0 ? calculatedSum : '';
     } 
