@@ -958,7 +958,7 @@
         document.getElementById('bottom-reward-bar').style.width = (earnedPts > 0 && currentLevelProgress === 0 ? 100 : percent) + '%';
         
         if (earnedPts > 0) {
-          document.getElementById('bottom-reward-title').innerText = `👉 點此挑選 (${usedPts}/${earnedPts}點)`;
+          document.getElementById('bottom-reward-title').innerText = `👉 挑選滿額禮 (${usedPts}/${earnedPts}點)`;
           if (neededForNext === threshold) {
             document.getElementById('bottom-reward-status').innerHTML = `<span style="color:#28a745; font-weight:bold;">🎉 已達標</span>`;
           } else {
@@ -1211,8 +1211,6 @@
       if (custNote) {
         message += `📝 備註說明：${custNote}\n`;
       }
-
-      message += "\n請問目前都有現貨嗎？";
       
       const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(message)}`;
       window.location.href = lineUrl;
