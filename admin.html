@@ -300,32 +300,50 @@
       adminKey = localStorage.getItem('fong_admin_key');
       document.getElementById('login-overlay').style.display = 'none';
       loadAllData();
+      recordVisit('後台管理系統');
     }
   }
 
-  async function verifyLogin() {
+  function verifyLogin() {
     const inputKey = document.getElementById('input-admin-key').value.trim();
     if (!inputKey) return alert('請輸入密碼！');
 
-    try {
-      const res = await fetch(GAS_API_URL, {
-        method: 'POST',
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "verifyAdminKey", adminKey: inputKey })
-      });
-      const result = await res.json();
-
+    fetch(GAS_API_URL, {
+      method: 'POST',
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "verifyAdminKey", adminKey: inputKey })
+    })
+    .then(res => res.json())
+    .then(result => {
       if (result.success) {
         adminKey = inputKey;
         localStorage.setItem('fong_admin_key', adminKey);
         document.getElementById('login-overlay').style.display = 'none';
         loadAllData();
+        recordVisit('後台管理系統');
       } else {
         alert("❌ 登入失敗：後台管理密碼不正確！");
       }
-    } catch (e) {
-      alert("網路連線錯誤，請檢查 API 設定");
-    }
+    })
+    .catch(() => alert("網路連線錯誤，請檢查 API 設定"));
+  }
+
+  /* 👁️ 紀錄後台造訪與 IP */
+  async function recordVisit(sourceName) {
+    try {
+      let clientIp = "未知";
+      try {
+        const ipRes = await fetch("https://api.ipify.org?format=json");
+        const ipData = await ipRes.json();
+        clientIp = ipData.ip || "未知";
+      } catch (e) {}
+
+      fetch(GAS_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "logVisit", source: sourceName, ip: clientIp })
+      }).catch(() => {});
+    } catch (e) {}
   }
 
   function logoutAdmin() { localStorage.removeItem('fong_admin_key'); location.reload(); }
