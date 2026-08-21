@@ -20,7 +20,6 @@
       display: flex; flex-direction: column; align-items: center;
     }
 
-    /* 🎇 頂部品牌 Header / LOGO (連點 5 下直達後台) */
     .brand-header {
       width: 100%; max-width: 1000px;
       text-align: center;
@@ -348,7 +347,7 @@
       <div class="media-container" id="detail-media-box" style="margin-bottom: 15px; border-radius: 8px; overflow: hidden; display:none;" onclick="playDetailVideo()">
         <img id="detail-img" src="" alt="商品圖片">
         <div class="play-button" id="detail-play-btn"></div>
-        <iframe id="detail-iframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        iframe id="detail-iframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
       </div>
       
       <div style="font-size: 0.95rem; color: #ccc; margin-bottom: 10px;">
@@ -1080,7 +1079,7 @@
         const unUsedPts = parseFloat((earnedPts - usedPts).toFixed(2));
         
         if (unUsedPts > 0) {
-          const confirmLeave = confirm(`💡 提醒您：\n您目前還有 ${unUsedPts} 點滿額自選禮尚未挑選！\n\n按下【確定】放棄剩餘贈品，繼續前往結帳\n按下【取消】立即前往挑選贈品`);
+          const confirmLeave = confirm(`💡 提醒您：\n您目前還有 ${unUsedPts} 點滿額自選禮尚未挑選！\n\n按下【確定】放棄剩餘贈品，繼續前往結帳\n按下【取消】欄位立即前往挑選贈品`);
           if (!confirmLeave) {
             openRewardSelectModal();
             return;
