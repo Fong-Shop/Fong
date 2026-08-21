@@ -134,7 +134,6 @@
     .add-cart-btn:hover { background-color: #444; }
     .add-cart-btn.selected { background-color: #28a745; color: #fff; border-color: #28a745; }
 
-    /* 🎁 獨立滿額自選禮膠囊 */
     .bottom-reward-pill {
       position: fixed; bottom: 82px; left: 50%; transform: translateX(-50%);
       width: calc(100% - 130px); max-width: 280px;
@@ -155,7 +154,6 @@
       width: 0%; height: 100%; background: linear-gradient(90deg, #ff9900, #28a745); transition: width 0.3s ease;
     }
 
-    /* 🛒 獨立底部結帳按鈕 */
     .floating-cart {
       position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%);
       width: calc(100% - 90px); max-width: 320px;
@@ -167,7 +165,6 @@
     }
     .floating-cart:hover { transform: translateX(-50%) scale(1.03); }
 
-    /* 🚀 右側直立工具群組 */
     .floating-tools {
       position: fixed; bottom: 120px; right: 16px;
       display: flex; flex-direction: column; align-items: center;
@@ -347,7 +344,7 @@
       <div class="media-container" id="detail-media-box" style="margin-bottom: 15px; border-radius: 8px; overflow: hidden; display:none;" onclick="playDetailVideo()">
         <img id="detail-img" src="" alt="商品圖片">
         <div class="play-button" id="detail-play-btn"></div>
-        iframe id="detail-iframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        <iframe id="detail-iframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
       </div>
       
       <div style="font-size: 0.95rem; color: #ccc; margin-bottom: 10px;">
@@ -497,7 +494,6 @@
     }
 
     async function loadProducts() {
-      // 👁️ 紀錄前台訪客造訪與 IP
       recordVisit('前台購物目錄');
 
       const cachedData = localStorage.getItem('fong_cache_v28');
@@ -959,7 +955,7 @@
         document.getElementById('bottom-reward-bar').style.width = (earnedPts > 0 && currentLevelProgress === 0 ? 100 : percent) + '%';
         
         if (earnedPts > 0) {
-          document.getElementById('bottom-reward-title').innerText = `👉 挑選滿額禮 (${usedPts}/${earnedPts}點)`;
+          document.getElementById('bottom-reward-title').innerText = `👉 點此挑選 (${usedPts}/${earnedPts}點)`;
           if (neededForNext === threshold) {
             document.getElementById('bottom-reward-status').innerHTML = `<span style="color:#28a745; font-weight:bold;">🎉 已達標</span>`;
           } else {
@@ -1187,7 +1183,9 @@
       const custNote = document.getElementById('order-customer-note').value.trim();
       const totalPrice = calculateCartTotal();
 
-      let message = "想訂購以下商品：\n------------------------\n";
+      // 💬 動態載入訂單抬頭 (設定頁面)
+      const customHeader = siteSettings['訂單抬頭'] || "想訂購以下商品：";
+      let message = `${customHeader}\n------------------------\n`;
       
       for (let title in selectedItems) { 
         const qty = selectedItems[title];
@@ -1213,7 +1211,9 @@
         message += `📝 備註說明：${custNote}\n`;
       }
 
-      message += "\n請問目前都有現貨嗎？";
+      // 🎁 動態載入訂單結尾 (設定頁面，含目錄網址與行銷活動)
+      const customFooter = siteSettings['訂單結尾'] || "\n請問目前都有現貨嗎？";
+      message += `\n${customFooter}`;
       
       const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(message)}`;
       window.location.href = lineUrl;
@@ -1230,7 +1230,6 @@
       }
     });
 
-    /* 👁️ 紀錄造訪與 IP */
     async function recordVisit(sourceName) {
       try {
         let clientIp = "未知";
