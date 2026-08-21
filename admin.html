@@ -46,15 +46,9 @@
     }
     .btn-submit:disabled { background: #555; cursor: not-allowed; }
 
-    .item-list { max-height: 250px; overflow-y: auto; border: 1px solid #333; border-radius: 6px; margin-bottom: 15px; }
-    .item-row {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 10px; border-bottom: 1px solid #2a2a2a; background: #181818;
-    }
-    .item-title { font-weight: bold; font-size: 0.95rem; }
-    .item-status { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; background: #28a745; }
-    .item-status.off { background: #ff4d4d; }
-    
+    .logout-link { color: #ff4d4d; text-decoration: none; font-size: 0.85rem; cursor: pointer; font-weight: bold; }
+    .logout-link:hover { text-decoration: underline; }
+
     #login-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: #121212; z-index: 3000; display: flex;
@@ -69,7 +63,7 @@
     <div class="admin-card" style="text-align: center;">
       <h2>🔑 請輸入後台管理密碼</h2>
       <div class="form-group" style="margin-top: 15px;">
-        <input type="password" id="admin-pass-input" placeholder="輸入密碼 (預設 fong888)">
+        <input type="password" id="admin-pass-input" placeholder="請輸入管理密碼">
       </div>
       <button class="btn-submit" onclick="loginAdmin()">登入管理後台</button>
       <div style="margin-top: 15px;"><a href="index.html" style="color: #aaa; text-decoration: none; font-size: 0.85rem;">⬅ 返回商品目錄</a></div>
@@ -79,7 +73,10 @@
   <div class="admin-card">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
       <h2 style="margin:0;">🛠️ FONG 煙火管理後台</h2>
-      <a href="index.html" style="color:#ffcc00; text-decoration:none; font-size:0.85rem;">⬅ 回前台</a>
+      <div>
+        <span class="logout-link" onclick="logoutAdmin()">🔓 登出</span> | 
+        <a href="index.html" style="color:#ffcc00; text-decoration:none; font-size:0.85rem;">⬅ 回前台</a>
+      </div>
     </div>
 
     <!-- 功能頁籤 -->
@@ -92,7 +89,7 @@
     <!-- 📦 1. 單品管理頁面 -->
     <div id="tab-catalog">
       <div class="form-group">
-        <label>選擇或搜尋已有商品（點擊帶入編輯）：</label>
+        <label>選擇已有單品（點擊帶入編輯）：</label>
         <select id="catalog-select" onchange="selectCatalogItem()"><option value="">-- 新增新商品 --</option></select>
       </div>
 
@@ -146,7 +143,7 @@
     <!-- 🎁 2. 套裝管理頁面 -->
     <div id="tab-package" style="display: none;">
       <div class="form-group">
-        <label>選擇已有套裝：</label>
+        <label>選擇已有套裝（點擊帶入編輯）：</label>
         <select id="package-select" onchange="selectPackageItem()"><option value="">-- 新增新套裝 --</option></select>
       </div>
 
@@ -244,12 +241,18 @@
       loadAdminData();
     }
 
+    function logoutAdmin() {
+      localStorage.removeItem('fong_admin_key');
+      adminKey = "";
+      document.getElementById('admin-pass-input').value = "";
+      document.getElementById('login-overlay').style.display = "flex";
+    }
+
     // 自動讀取記憶密碼
     window.addEventListener('DOMContentLoaded', () => {
       const savedKey = localStorage.getItem('fong_admin_key');
       if (savedKey) {
         adminKey = savedKey;
-        document.getElementById('admin-pass-input').value = savedKey;
         document.getElementById('login-overlay').style.display = "none";
         loadAdminData();
       }
@@ -258,22 +261,49 @@
     async function loadAdminData() {
       try {
         const res = await fetch(GAS_API_URL + "?t=" + new Date().getTime());
-        siteData = await res.json();
+        const data = await res.json();
         
-        // 渲染下拉選單
+        // 智慧欄位對接校正（相容試算表中文標題與 JS 鍵名）
+        siteData.products = (data.products || []).map(p => ({
+          title: p['商品名稱'] || p.title || '',
+          image: p['圖片檔名'] || p.image || '',
+          youtube: p['影片網址'] || p.youtube || '',
+          originalPrice: p['原價'] || p.originalPrice || '',
+          specialPrice: p['特價'] || p.specialPrice || '',
+          status: p['狀態'] || p.status || '',
+          category: p['分類'] || p.category || ''
+        }));
+
+        siteData.packages = (data.packages || []).map(pkg => ({
+          title: pkg['商品名稱'] || pkg['套裝名稱'] || pkg.title || '',
+          image: pkg['圖片檔名'] || pkg.image || '',
+          youtube: pkg['影片網址'] || pkg.youtube || '',
+          originalPrice: pkg['原價'] || pkg.originalPrice || '',
+          specialPrice: pkg['特價'] || pkg.specialPrice || '',
+          status: pkg['狀態'] || pkg.status || '',
+          category: pkg['分類'] || pkg.category || '超值套裝',
+          packageDetail: pkg['包含內容'] || pkg.packageDetail || ''
+        }));
+
+        siteData.settings = data.settings || {};
+
+        // 渲染單品下拉選單
         const catSelect = document.getElementById('catalog-select');
         catSelect.innerHTML = '<option value="">-- 新增新商品 --</option>';
         siteData.products.forEach((p, index) => {
+          if (!p.title) return;
           catSelect.innerHTML += `<option value="${index}">${p.title} ${p.status === 'N' ? '(已下架)' : ''}</option>`;
         });
 
+        // 渲染套裝下拉選單
         const pkgSelect = document.getElementById('package-select');
         pkgSelect.innerHTML = '<option value="">-- 新增新套裝 --</option>';
         siteData.packages.forEach((pkg, index) => {
+          if (!pkg.title) return;
           pkgSelect.innerHTML += `<option value="${index}">${pkg.title} ${pkg.status === 'N' ? '(已下架)' : ''}</option>`;
         });
 
-        // 帶入設定
+        // 帶入網站設定
         const s = siteData.settings || {};
         document.getElementById('set-announcement').value = s['公告內容'] || '';
         document.getElementById('set-line-url').value = s['LINE連結'] || '';
@@ -336,23 +366,21 @@
       document.getElementById('pkg-status').value = pkg.status || '';
     }
 
-    // 📷 觸發相機
+    // 📷 觸發相機/選圖
     function triggerCamera(target) {
       currentUploadTarget = target;
       document.getElementById('camera-file-input').click();
     }
 
-    // 📷 處理拍照與自動圖片壓縮
     function handleCameraUpload(input) {
       if (!input.files || !input.files[0]) return;
       const file = input.files[0];
-      const btnBtn = document.querySelector(`.btn-camera`);
       
       const reader = new FileReader();
       reader.onload = function(e) {
         const img = new Image();
         img.onload = function() {
-          // 在手機端壓縮圖片（最大寬度 800px）
+          // 在手機端壓縮圖片（最大寬度 800px，畫質 0.7，大幅節省上傳時間）
           const canvas = document.createElement('canvas');
           let width = img.width;
           let height = img.height;
@@ -398,7 +426,7 @@
           targetInput.value = result.url;
           previewImg.src = result.url;
           previewImg.style.display = "block";
-          alert("✅ 照片上傳 Google Drive 成功！");
+          alert("✅ 照片已成功上傳至 Google Drive！");
         } else {
           alert("❌ 上傳失敗: " + result.message);
           targetInput.value = "";
