@@ -3,204 +3,189 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FONG 煙火管理後台</title>
+  <title>FONG 煙火目錄 - 後台管理</title>
   <style>
     * { box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: #121212; color: #e0e0e0;
+      font-family: Arial, sans-serif; background-color: #121212; color: #fff;
       margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center;
     }
     .admin-card {
       width: 100%; max-width: 600px; background: #1e1e1e; border-radius: 12px;
-      padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); border: 1px solid #333;
+      padding: 20px; border: 1px solid #333; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     }
-    .header-row {
+    
+    .admin-header {
       display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 12px;
+      margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px;
       flex-wrap: wrap; gap: 8px;
     }
-    .header-title { font-size: 1.25rem; font-weight: bold; color: #ffcc00; }
-    .header-actions { display: flex; gap: 8px; font-size: 0.85rem; }
-    .btn-text { color: #ff4d4d; cursor: pointer; text-decoration: none; font-weight: bold; }
-    
-    .nav-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .admin-header h2 { margin: 0; color: #ffcc00; font-size: 1.2rem; }
+    .admin-header-actions { font-size: 0.85rem; color: #888; }
+
+    .tab-row { display: flex; gap: 8px; margin-bottom: 15px; }
     .tab-btn {
-      flex: 1; padding: 10px; background: #2a2a2a; color: #aaa; border: 1px solid #444;
-      border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.95rem; text-align: center;
+      flex: 1; padding: 10px; background: #2a2a2a; color: #ccc; border: 1px solid #444;
+      border-radius: 6px; cursor: pointer; font-weight: bold; text-align: center;
     }
     .tab-btn.active { background: #ff4d4d; color: #fff; border-color: #ff4d4d; }
 
-    .form-group { margin-bottom: 15px; display: flex; flex-direction: column; gap: 6px; }
-    label { font-size: 0.88rem; color: #bbb; font-weight: bold; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; text-align: left; }
+    label { font-size: 0.85rem; color: #aaa; font-weight: bold; }
     input, select, textarea {
       width: 100%; background: #2a2a2a; border: 1px solid #444; color: #fff;
-      padding: 10px 12px; border-radius: 6px; font-size: 0.95rem; outline: none;
+      padding: 10px; border-radius: 6px; font-size: 0.95rem; outline: none;
     }
-    input:focus, select:focus, textarea:focus { border-color: #ffcc00; }
-    textarea { resize: vertical; height: 75px; }
+    input:focus, textarea:focus { border-color: #ffcc00; }
 
-    .image-preview-container {
-      display: flex; gap: 10px; align-items: center; margin-top: 5px;
-    }
-    .img-preview {
-      width: 65px; height: 65px; border-radius: 6px; object-fit: cover;
-      background: #000; border: 1px solid #444; display: none;
+    .camera-box {
+      display: flex; gap: 10px; align-items: center; margin-top: 4px;
     }
     .btn-camera {
-      background: #ff9900; color: #000; padding: 8px 12px; border-radius: 6px;
-      font-weight: bold; cursor: pointer; border: none; font-size: 0.85rem;
-      display: inline-flex; align-items: center; gap: 4px;
+      background: #ff9900; color: #000; border: none; padding: 8px 12px;
+      border-radius: 6px; font-size: 0.85rem; font-weight: bold; cursor: pointer; white-space: nowrap;
     }
+    .preview-img { width: 50px; height: 50px; border-radius: 6px; object-fit: cover; display: none; }
 
     .btn-submit {
-      width: 100%; padding: 12px; background: #28a745; color: #fff; border: none;
-      border-radius: 8px; font-size: 1.05rem; font-weight: bold; cursor: pointer;
-      margin-top: 10px; transition: 0.2s;
+      width: 100%; padding: 12px; background: #06C755; color: #fff; border: none;
+      border-radius: 6px; font-size: 1.05rem; font-weight: bold; cursor: pointer; margin-top: 10px;
     }
-    .btn-submit:hover { background: #218838; }
+    .btn-submit:disabled { background: #555; cursor: not-allowed; }
 
-    /* 🔐 登入彈窗 */
-    .login-overlay {
+    .logout-link { color: #ff4d4d; text-decoration: none; font-size: 0.85rem; cursor: pointer; font-weight: bold; }
+    .logout-link:hover { text-decoration: underline; }
+
+    #login-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.92); z-index: 3000; display: flex;
+      background: #121212; z-index: 3000; display: flex;
       justify-content: center; align-items: center; padding: 20px;
-    }
-    .login-box {
-      width: 100%; max-width: 360px; background: #1e1e1e; border-radius: 12px;
-      padding: 25px 20px; border: 2px solid #ffcc00; text-align: center;
-    }
-
-    /* 💬 系統提示彈窗 */
-    .popup-overlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background-color: rgba(0, 0, 0, 0.85); z-index: 3500; display: none; 
-      justify-content: center; align-items: center; padding: 15px; backdrop-filter: blur(3px);
-    }
-    .popup-content {
-      position: relative; max-width: 380px; width: 100%;
-      background: #181818; border-radius: 14px; border: 2px solid #ffcc00;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6); padding: 22px 16px;
-      text-align: center; color: #fff;
     }
   </style>
 </head>
 <body>
 
-  <!-- 🔐 登入彈窗 -->
-  <div class="login-overlay" id="login-overlay">
-    <div class="login-box">
-      <h2 style="color:#ffcc00; margin-top:0;">🔒 管理者安全驗證</h2>
-      <div class="form-group" style="text-align:left;">
-        <label>請輸入後台管理密碼：</label>
-        <input type="password" id="input-admin-key" placeholder="請輸入密碼">
+  <!-- 🔐 登入驗證視窗 -->
+  <div id="login-overlay">
+    <div class="admin-card" style="text-align: center;">
+      <h2 style="color:#ffcc00; margin-top:0;">🔑 請輸入後台管理密碼</h2>
+      <div class="form-group" style="margin-top: 15px;">
+        <input type="password" id="admin-pass-input" placeholder="請輸入管理密碼">
       </div>
-      <button class="btn-submit" onclick="verifyLogin()" style="background:#06C755;">🔑 登入管理系統</button>
+      <button class="btn-submit" onclick="loginAdmin()">登入管理後台</button>
+      <div style="margin-top: 15px;"><a href="index.html" style="color: #aaa; text-decoration: none; font-size: 0.85rem;">⬅ 返回商品目錄</a></div>
     </div>
   </div>
 
-  <!-- 💬 客製化系統提示彈窗 -->
-  <div class="popup-overlay" id="admin-toast-modal">
-    <div class="popup-content">
-      <div style="font-size: 1.2rem; font-weight: bold; color: #ffcc00; margin-bottom: 10px;" id="admin-toast-title">💡 提示</div>
-      <div id="admin-toast-msg" style="font-size: 0.95rem; color: #ddd; margin-bottom: 20px; white-space: pre-wrap;"></div>
-      <button class="btn-submit" onclick="closeAdminToast()" style="padding: 10px; font-size: 0.95rem;">確定</button>
-    </div>
-  </div>
-
+  <!-- 主管理卡片 -->
   <div class="admin-card">
-    <div class="header-row">
-      <div class="header-title">🛠️ FONG 煙火管理後台</div>
-      <div class="header-actions">
-        <span class="btn-text" onclick="logoutAdmin()">🔓 登出</span>
-        <span style="color:#555;">|</span>
-        <a href="index.html" class="btn-text" style="color:#aaa;">⬅ 回前台</a>
+    <div class="admin-header">
+      <h2>🛠️ FONG 煙火管理後台</h2>
+      <div class="admin-header-actions">
+        <span class="logout-link" onclick="logoutAdmin()">🔓 登出</span> | 
+        <a href="index.html" style="color:#ffcc00; text-decoration:none; font-size:0.85rem; font-weight:bold;">⬅ 回前台</a>
       </div>
     </div>
 
-    <!-- 頁籤選單 -->
-    <div class="nav-tabs">
-      <div class="tab-btn active" id="tab-products" onclick="switchTab('products')">📦 單品管理</div>
-      <div class="tab-btn" id="tab-packages" onclick="switchTab('packages')">🎁 套裝管理</div>
-      <div class="tab-btn" id="tab-settings" onclick="switchTab('settings')">⚙️ 網站設定</div>
+    <!-- 功能頁籤 -->
+    <div class="tab-row">
+      <div class="tab-btn active" onclick="switchTab('catalog')">📦 單品管理</div>
+      <div class="tab-btn" onclick="switchTab('package')">🎁 套裝管理</div>
+      <div class="tab-btn" onclick="switchTab('settings')">⚙️ 網站設定</div>
     </div>
 
-    <!-- 📦 1. 單品管理表單 -->
-    <div id="sec-products">
+    <!-- 📦 1. 單品管理頁面 -->
+    <div id="tab-catalog">
       <div class="form-group">
         <label>選擇已有單品（點擊帶入編輯）：</label>
-        <select id="select-product" onchange="fillProductForm()"><option value="">-- 新增新商品 --</option></select>
+        <select id="catalog-select" onchange="selectCatalogItem()"><option value="">-- 新增新商品 --</option></select>
       </div>
+
       <div class="form-group">
         <label>商品名稱：</label>
-        <input type="text" id="p-title" placeholder="例如：蘋果小高空(大花)">
+        <input type="text" id="cat-title" placeholder="例如：蘋果小高空(大花)">
       </div>
+
       <div class="form-group">
-        <label>圖片檔名 / 網址（可拍照或點選圖片上傳）：</label>
-        <div style="display:flex; gap:8px;">
-          <input type="text" id="p-image" placeholder="https://..." style="flex-grow:1;">
-          <button class="btn-camera" onclick="triggerCamera('p-image')">📷 拍照/選圖</button>
-        </div>
-        <div class="image-preview-container">
-          <img id="p-image-preview" class="img-preview" alt="預覽">
-          <span id="p-image-status" style="font-size:0.8rem; color:#aaa;"></span>
+        <label>封面圖片網址：</label>
+        <div class="camera-box">
+          <input type="text" id="cat-image" placeholder="可直接貼網址或點右側拍照">
+          <button class="btn-camera" onclick="triggerCamera('cat')">📷 拍照/選圖</button>
+          <img id="cat-preview" class="preview-img">
         </div>
       </div>
+
       <div class="form-group">
         <label>YouTube 影片網址（選填）：</label>
-        <input type="text" id="p-youtube" placeholder="https://www.youtube.com/watch?v=...">
+        <input type="text" id="cat-youtube" placeholder="https://www.youtube.com/watch?v=...">
       </div>
-      <div style="display:flex; gap:10px;">
+
+      <div style="display: flex; gap: 10px;">
         <div class="form-group" style="flex:1;">
           <label>原價：</label>
-          <input type="number" id="p-originalPrice" placeholder="150">
+          <input type="number" id="cat-orig-price" placeholder="150">
         </div>
         <div class="form-group" style="flex:1;">
           <label>特價：</label>
-          <input type="number" id="p-specialPrice" placeholder="99">
+          <input type="number" id="cat-spec-price" placeholder="99">
         </div>
       </div>
-      <div style="display:flex; gap:10px;">
+
+      <div style="display: flex; gap: 10px;">
         <div class="form-group" style="flex:1;">
           <label>分類：</label>
-          <input type="text" id="p-category" placeholder="天上飛 / 地上轉">
+          <input type="text" id="cat-category" placeholder="天上飛 / 地上轉">
         </div>
         <div class="form-group" style="flex:1;">
           <label>狀態：</label>
-          <select id="p-status">
+          <select id="cat-status">
             <option value="">上架中</option>
             <option value="N">下架 (N)</option>
           </select>
         </div>
       </div>
-      <button class="btn-submit" id="btn-save-product" onclick="saveProduct()">💾 儲存單品資料</button>
+
+      <button class="btn-submit" id="btn-save-cat" onclick="saveCatalogItem()">💾 儲存單品資料</button>
     </div>
 
-    <!-- 🎁 2. 套裝管理表單 -->
-    <div id="sec-packages" style="display:none;">
+    <!-- 🎁 2. 套裝管理頁面 -->
+    <div id="tab-package" style="display: none;">
       <div class="form-group">
         <label>選擇已有套裝（點擊帶入編輯）：</label>
-        <select id="select-package" onchange="fillPackageForm()"><option value="">-- 新增套裝 --</option></select>
+        <select id="package-select" onchange="selectPackageItem()"><option value="">-- 新增新套裝 --</option></select>
       </div>
+
       <div class="form-group">
         <label>套裝名稱：</label>
         <input type="text" id="pkg-title" placeholder="例如：真●土豪套餐">
       </div>
+
       <div class="form-group">
-        <label>包含內容（以逗號分隔，品項*數量）：</label>
-        <textarea id="pkg-detail" placeholder="蘋果小高空(大花)*1, 炸花大吐珠(不吐)*1, 一發入魂(特效花束)*1"></textarea>
+        <label>包含內容品項與數量：</label>
+        <textarea id="pkg-detail" style="height:60px;" placeholder="例如：蘋果小高空(大花)*1, 炸花大吐珠(不吐)*1, 一發入魂*1"></textarea>
       </div>
-      <div style="display:flex; gap:10px;">
+
+      <div class="form-group">
+        <label>套裝封面圖片：</label>
+        <div class="camera-box">
+          <input type="text" id="pkg-image" placeholder="可留空或點右側拍照">
+          <button class="btn-camera" onclick="triggerCamera('pkg')">📷 拍照/選圖</button>
+          <img id="pkg-preview" class="preview-img">
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px;">
         <div class="form-group" style="flex:1;">
-          <label>原價（可空白自動加總）：</label>
-          <input type="number" id="pkg-originalPrice" placeholder="留空自動計算">
+          <label>原價（可留空自動計算）：</label>
+          <input type="number" id="pkg-orig-price" placeholder="900">
         </div>
         <div class="form-group" style="flex:1;">
           <label>特價：</label>
-          <input type="number" id="pkg-specialPrice" placeholder="399">
+          <input type="number" id="pkg-spec-price" placeholder="399">
         </div>
       </div>
-      <div style="display:flex; gap:10px;">
+
+      <div style="display: flex; gap: 10px;">
         <div class="form-group" style="flex:1;">
           <label>分類：</label>
           <input type="text" id="pkg-category" value="超值套裝">
@@ -213,31 +198,33 @@
           </select>
         </div>
       </div>
-      <button class="btn-submit" id="btn-save-package" onclick="savePackage()">💾 儲存套裝資料</button>
+
+      <button class="btn-submit" id="btn-save-pkg" onclick="savePackageItem()">💾 儲存套裝資料</button>
     </div>
 
-    <!-- ⚙️ 3. 網站設定表單 -->
-    <div id="sec-settings" style="display:none;">
+    <!-- ⚙️ 3. 網站設定頁面 -->
+    <div id="tab-settings" style="display: none;">
       <div class="form-group">
         <label>📢 公告內容：</label>
-        <textarea id="set-announcement" placeholder="例如：📢 最新公告：歡迎光臨 FONG 煙火精選目錄！..."></textarea>
+        <textarea id="set-announcement" style="height:60px;"></textarea>
       </div>
       <div class="form-group">
-        <label>💬 LINE 官方帳號連結：</label>
-        <input type="text" id="set-line" placeholder="https://line.me/ti/p/...">
+        <label>💬 LINE 連結：</label>
+        <input type="text" id="set-line-url">
       </div>
       <div class="form-group">
-        <label>🎁 滿額門檻 (達標集1點)：</label>
+        <label>🎁 滿額門檻 (金額)：</label>
         <input type="number" id="set-threshold" placeholder="600">
       </div>
       <div class="form-group">
-        <label>🎁 滿額贈品池 (名稱*消耗點數，逗號分隔)：</label>
-        <textarea id="set-rewards" placeholder="蘋果小高空(大花)*0.5, 3元笛音火箭(盒裝)*1, 炸花大吐珠(不吐)*2"></textarea>
+        <label>🎁 滿額贈品設定 (品項*需兌換點數)：</label>
+        <textarea id="set-rewards" style="height:60px;" placeholder="蘋果小高空(大花)*0.5, 3元笛音火箭(盒裝)*1, 炸花大吐珠(不吐)*2"></textarea>
       </div>
       <div class="form-group">
-        <label>🔥 主打推薦商品 (名稱逗號分隔)：</label>
+        <label>🔥 主打推播商品 (名稱逗號隔開)：</label>
         <input type="text" id="set-featured">
       </div>
+
       <button class="btn-submit" id="btn-save-set" onclick="saveSettings()">💾 儲存網站設定</button>
     </div>
 
@@ -246,320 +233,299 @@
   <!-- 📷 隱藏式拍照檔案選擇器 -->
   <input type="file" id="camera-file-input" accept="image/*" capture="environment" style="display: none;" onchange="handleCameraUpload(this)">
 
-<script>
-  const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdvebTnsOSgEURWczwLjLuQPIz9tbHWKSpEIgsT38V5jR7vzHUHbFiPGtH5F0rQJEZWA/exec";
+  <script>
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdvebTnsOSgEURWczwLjLuQPIz9tbHWKSpEIgsT38V5jR7vzHUHbFiPGtH5F0rQJEZWA/exec";
+    
+    let adminKey = "";
+    let siteData = { products: [], packages: [], settings: {} };
+    let currentUploadTarget = "";
 
-  let adminKey = "";
-  let siteData = { products: [], packages: [], settings: {} };
-  let currentUploadTarget = "";
-
-  function showAdminToast(msg, title = "💡 系統提示") {
-    document.getElementById('admin-toast-title').innerText = title;
-    document.getElementById('admin-toast-msg').innerText = msg;
-    document.getElementById('admin-toast-modal').style.display = 'flex';
-  }
-
-  function closeAdminToast() {
-    document.getElementById('admin-toast-modal').style.display = 'none';
-  }
-
-  function checkSavedAuth() {
-    const savedKey = localStorage.getItem('fong_admin_key');
-    if (savedKey) {
-      adminKey = savedKey;
-      document.getElementById('login-overlay').style.display = 'none';
-      loadAllData();
+    function loginAdmin() {
+      const pass = document.getElementById('admin-pass-input').value.trim();
+      if (!pass) return alert("請輸入密碼！");
+      adminKey = pass;
+      localStorage.setItem('fong_admin_key', pass);
+      document.getElementById('login-overlay').style.display = "none";
+      loadAdminData();
     }
-  }
 
-  function verifyLogin() {
-    const inputKey = document.getElementById('input-admin-key').value.trim();
-    if (!inputKey) { showAdminToast('請輸入密碼！', '🔒 驗證失敗'); return; }
-    adminKey = inputKey;
-    localStorage.setItem('fong_admin_key', adminKey);
-    document.getElementById('login-overlay').style.display = 'none';
-    loadAllData();
-  }
+    function logoutAdmin() {
+      localStorage.removeItem('fong_admin_key');
+      adminKey = "";
+      document.getElementById('admin-pass-input').value = "";
+      document.getElementById('login-overlay').style.display = "flex";
+    }
 
-  function logoutAdmin() {
-    localStorage.removeItem('fong_admin_key');
-    location.reload();
-  }
+    // 自動讀取記憶密碼
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedKey = localStorage.getItem('fong_admin_key');
+      if (savedKey) {
+        adminKey = savedKey;
+        document.getElementById('login-overlay').style.display = "none";
+        loadAdminData();
+      }
+    });
 
-  async function loadAllData() {
-    try {
-      const res = await fetch(GAS_API_URL + '?t=' + new Date().getTime());
-      const data = await res.json();
-      
-      if (data.error) {
-        showAdminToast("後端傳回錯誤：" + data.error, "❌ 讀取失敗");
+    async function loadAdminData() {
+      try {
+        const res = await fetch(GAS_API_URL + "?t=" + new Date().getTime());
+        const data = await res.json();
+        
+        // 智慧欄位對接校正（相容試算表中文標題與 JS 鍵名）
+        siteData.products = (data.products || []).map(p => ({
+          title: p['商品名稱'] || p.title || '',
+          image: p['圖片檔名'] || p.image || '',
+          youtube: p['影片網址'] || p.youtube || '',
+          originalPrice: p['原價'] || p.originalPrice || '',
+          specialPrice: p['特價'] || p.specialPrice || '',
+          status: p['狀態'] || p.status || '',
+          category: p['分類'] || p.category || ''
+        }));
+
+        siteData.packages = (data.packages || []).map(pkg => ({
+          title: pkg['商品名稱'] || pkg['套裝名稱'] || pkg.title || '',
+          image: pkg['圖片檔名'] || pkg.image || '',
+          youtube: pkg['影片網址'] || pkg.youtube || '',
+          originalPrice: pkg['原價'] || pkg.originalPrice || '',
+          specialPrice: pkg['特價'] || pkg.specialPrice || '',
+          status: pkg['狀態'] || pkg.status || '',
+          category: pkg['分類'] || pkg.category || '超值套裝',
+          packageDetail: pkg['包含內容'] || pkg.packageDetail || ''
+        }));
+
+        siteData.settings = data.settings || {};
+
+        // 渲染單品下拉選單
+        const catSelect = document.getElementById('catalog-select');
+        catSelect.innerHTML = '<option value="">-- 新增新商品 --</option>';
+        siteData.products.forEach((p, index) => {
+          if (!p.title) return;
+          catSelect.innerHTML += `<option value="${index}">${p.title} ${p.status === 'N' ? '(已下架)' : ''}</option>`;
+        });
+
+        // 渲染套裝下拉選單
+        const pkgSelect = document.getElementById('package-select');
+        pkgSelect.innerHTML = '<option value="">-- 新增新套裝 --</option>';
+        siteData.packages.forEach((pkg, index) => {
+          if (!pkg.title) return;
+          pkgSelect.innerHTML += `<option value="${index}">${pkg.title} ${pkg.status === 'N' ? '(已下架)' : ''}</option>`;
+        });
+
+        // 帶入網站設定
+        const s = siteData.settings || {};
+        document.getElementById('set-announcement').value = s['公告內容'] || '';
+        document.getElementById('set-line-url').value = s['LINE連結'] || '';
+        document.getElementById('set-threshold').value = s['滿額門檻'] || '';
+        document.getElementById('set-rewards').value = s['滿額贈品'] || '';
+        document.getElementById('set-featured').value = s['主打商品'] || '';
+
+      } catch(e) { alert("讀取後台資料失敗: " + e.message); }
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('tab-catalog').style.display = tabName === 'catalog' ? 'block' : 'none';
+      document.getElementById('tab-package').style.display = tabName === 'package' ? 'block' : 'none';
+      document.getElementById('tab-settings').style.display = tabName === 'settings' ? 'block' : 'none';
+    }
+
+    function selectCatalogItem() {
+      const idx = document.getElementById('catalog-select').value;
+      if (idx === "") {
+        document.getElementById('cat-title').value = "";
+        document.getElementById('cat-image').value = "";
+        document.getElementById('cat-youtube').value = "";
+        document.getElementById('cat-orig-price').value = "";
+        document.getElementById('cat-spec-price').value = "";
+        document.getElementById('cat-category').value = "";
+        document.getElementById('cat-status').value = "";
         return;
       }
-
-      siteData = data;
-      renderDropdowns();
-      fillSettingsForm();
-    } catch (e) {
-      showAdminToast("讀取後台資料失敗: " + e.message, "❌ 連線失敗");
+      const p = siteData.products[idx];
+      document.getElementById('cat-title').value = p.title || '';
+      document.getElementById('cat-image').value = p.image || '';
+      document.getElementById('cat-youtube').value = p.youtube || '';
+      document.getElementById('cat-orig-price').value = p.originalPrice || '';
+      document.getElementById('cat-spec-price').value = p.specialPrice || '';
+      document.getElementById('cat-category').value = p.category || '';
+      document.getElementById('cat-status').value = p.status || '';
     }
-  }
 
-  function renderDropdowns() {
-    const pSelect = document.getElementById('select-product');
-    pSelect.innerHTML = '<option value="">-- 新增新商品 --</option>';
-    (siteData.products || []).forEach((p, idx) => {
-      const title = p['商品名稱'] || p.title || `商品 ${idx+1}`;
-      pSelect.innerHTML += `<option value="${idx}">${title}</option>`;
-    });
-
-    const pkgSelect = document.getElementById('select-package');
-    pkgSelect.innerHTML = '<option value="">-- 新增套裝 --</option>';
-    (siteData.packages || []).forEach((pkg, idx) => {
-      const title = pkg['商品名稱'] || pkg['套裝名稱'] || pkg.title || `套裝 ${idx+1}`;
-      pkgSelect.innerHTML += `<option value="${idx}">${title}</option>`;
-    });
-  }
-
-  function fillProductForm() {
-    const idx = document.getElementById('select-product').value;
-    if (idx === "") {
-      document.getElementById('p-title').value = '';
-      document.getElementById('p-image').value = '';
-      document.getElementById('p-youtube').value = '';
-      document.getElementById('p-originalPrice').value = '';
-      document.getElementById('p-specialPrice').value = '';
-      document.getElementById('p-category').value = '';
-      document.getElementById('p-status').value = '';
-      document.getElementById('p-image-preview').style.display = 'none';
-      return;
-    }
-    const p = siteData.products[idx];
-    document.getElementById('p-title').value = p['商品名稱'] || p.title || '';
-    document.getElementById('p-image').value = p['圖片檔名'] || p.image || '';
-    document.getElementById('p-youtube').value = p['影片網址'] || p.youtube || '';
-    document.getElementById('p-originalPrice').value = p['原價'] || p.originalPrice || '';
-    document.getElementById('p-specialPrice').value = p['特價'] || p.specialPrice || '';
-    document.getElementById('p-category').value = p['分類'] || p.category || '';
-    document.getElementById('p-status').value = p['狀態'] || p.status || '';
-
-    const imgUrl = p['圖片檔名'] || p.image;
-    if (imgUrl) {
-      const prev = document.getElementById('p-image-preview');
-      prev.src = imgUrl; prev.style.display = 'block';
-    }
-  }
-
-  function fillPackageForm() {
-    const idx = document.getElementById('select-package').value;
-    if (idx === "") {
-      document.getElementById('pkg-title').value = '';
-      document.getElementById('pkg-detail').value = '';
-      document.getElementById('pkg-originalPrice').value = '';
-      document.getElementById('pkg-specialPrice').value = '';
-      document.getElementById('pkg-category').value = '超值套裝';
-      document.getElementById('pkg-status').value = '';
-      return;
-    }
-    const pkg = siteData.packages[idx];
-    document.getElementById('pkg-title').value = pkg['商品名稱'] || pkg['套裝名稱'] || pkg.title || '';
-    document.getElementById('pkg-detail').value = pkg['包含內容'] || pkg.packageDetail || '';
-    document.getElementById('pkg-originalPrice').value = pkg['原價'] || pkg.originalPrice || '';
-    document.getElementById('pkg-specialPrice').value = pkg['特價'] || pkg.specialPrice || '';
-    document.getElementById('pkg-category').value = pkg['分類'] || pkg.category || '超值套裝';
-    document.getElementById('pkg-status').value = pkg['狀態'] || pkg.status || '';
-  }
-
-  function fillSettingsForm() {
-    const s = siteData.settings || {};
-    document.getElementById('set-announcement').value = s['公告內容'] || '';
-    document.getElementById('set-line').value = s['LINE連結'] || '';
-    document.getElementById('set-threshold').value = s['滿額門檻'] || '';
-    document.getElementById('set-rewards').value = s['滿額贈品'] || '';
-    document.getElementById('set-featured').value = s['主打商品'] || '';
-  }
-
-  function switchTab(tab) {
-    document.getElementById('tab-products').classList.remove('active');
-    document.getElementById('tab-packages').classList.remove('active');
-    document.getElementById('tab-settings').classList.remove('active');
-    
-    document.getElementById('sec-products').style.display = 'none';
-    document.getElementById('sec-packages').style.display = 'none';
-    document.getElementById('sec-settings').style.display = 'none';
-
-    document.getElementById(`tab-${tab}`).classList.add('active');
-    document.getElementById(`sec-${tab}`).style.display = 'block';
-  }
-
-  function triggerCamera(targetInputId) {
-    currentUploadTarget = targetInputId;
-    document.getElementById('camera-file-input').click();
-  }
-
-  async function handleCameraUpload(input) {
-    if (!input.files || !input.files[0]) return;
-    const file = input.files[0];
-    const statusSpan = document.getElementById('p-image-status');
-    statusSpan.innerText = '📷 圖片壓縮處理中...';
-
-    const base64 = await compressImage(file, 1024, 0.8);
-    statusSpan.innerText = '🚀 正在上傳至 Google Drive...';
-
-    try {
-      const res = await fetch(GAS_API_URL, {
-        method: 'POST',
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({
-          adminKey: adminKey,
-          action: "uploadImage",
-          base64Data: base64
-        })
-      });
-      const result = await res.json();
-      if (result.success) {
-        document.getElementById(currentUploadTarget).value = result.url;
-        statusSpan.innerText = '✅ 圖片上傳成功！';
-        const prev = document.getElementById('p-image-preview');
-        prev.src = result.url; prev.style.display = 'block';
-      } else {
-        showAdminToast("上傳失敗: " + result.message, "❌ 上傳失敗");
-        statusSpan.innerText = '❌ 上傳失敗';
+    function selectPackageItem() {
+      const idx = document.getElementById('package-select').value;
+      if (idx === "") {
+        document.getElementById('pkg-title').value = "";
+        document.getElementById('pkg-detail').value = "";
+        document.getElementById('pkg-image').value = "";
+        document.getElementById('pkg-orig-price').value = "";
+        document.getElementById('pkg-spec-price').value = "";
+        document.getElementById('pkg-category').value = "超值套裝";
+        document.getElementById('pkg-status').value = "";
+        return;
       }
-    } catch (e) {
-      showAdminToast("上傳失敗: " + e.message, "❌ 上傳失敗");
-      statusSpan.innerText = '❌ 上傳失敗';
+      const pkg = siteData.packages[idx];
+      document.getElementById('pkg-title').value = pkg.title || '';
+      document.getElementById('pkg-detail').value = pkg.packageDetail || '';
+      document.getElementById('pkg-image').value = pkg.image || '';
+      document.getElementById('pkg-orig-price').value = pkg.originalPrice || '';
+      document.getElementById('pkg-spec-price').value = pkg.specialPrice || '';
+      document.getElementById('pkg-category').value = pkg.category || '超值套裝';
+      document.getElementById('pkg-status').value = pkg.status || '';
     }
-  }
 
-  function compressImage(file, maxWidth, quality) {
-    return new Promise((resolve) => {
+    // 📷 觸發相機/選圖
+    function triggerCamera(target) {
+      currentUploadTarget = target;
+      document.getElementById('camera-file-input').click();
+    }
+
+    function handleCameraUpload(input) {
+      if (!input.files || !input.files[0]) return;
+      const file = input.files[0];
+      
       const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (event) => {
+      reader.onload = function(e) {
         const img = new Image();
-        img.src = event.target.result;
-        img.onload = () => {
+        img.onload = function() {
+          // 在手機端壓縮圖片（最大寬度 800px，畫質 0.7，大幅節省上傳時間）
+          const canvas = document.createElement('canvas');
           let width = img.width;
           let height = img.height;
-          if (width > maxWidth) {
-            height = Math.round((height * maxWidth) / width);
-            width = maxWidth;
+          const maxDim = 800;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
           }
-          const canvas = document.createElement('canvas');
-          canvas.width = width; canvas.height = height;
+          canvas.width = width;
+          canvas.height = height;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', quality));
+          
+          const base64Data = canvas.toDataURL('image/jpeg', 0.7);
+          uploadBase64ToDrive(base64Data);
         };
+        img.src = e.target.result;
       };
-    });
-  }
-
-  async function saveProduct() {
-    const title = document.getElementById('p-title').value.trim();
-    if (!title) { showAdminToast('請填寫商品名稱！', '⚠️ 資料不完整'); return; }
-
-    const productData = {
-      title: title,
-      image: document.getElementById('p-image').value.trim(),
-      youtube: document.getElementById('p-youtube').value.trim(),
-      originalPrice: document.getElementById('p-originalPrice').value,
-      specialPrice: document.getElementById('p-specialPrice').value,
-      category: document.getElementById('p-category').value.trim(),
-      status: document.getElementById('p-status').value
-    };
-
-    document.getElementById('btn-save-product').innerText = '⏳ 儲存中...';
-
-    try {
-      const res = await fetch(GAS_API_URL, {
-        method: 'POST',
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({
-          adminKey: adminKey,
-          action: "saveProduct",
-          product: productData
-        })
-      });
-      const result = await res.json();
-      showAdminToast(result.message, result.success ? "✅ 儲存成功" : "❌ 儲存失敗");
-      if (result.success) loadAllData();
-    } catch (e) {
-      showAdminToast("儲存失敗: " + e.message, "❌ 儲存失敗");
-    } finally {
-      document.getElementById('btn-save-product').innerText = '💾 儲存單品資料';
+      reader.readAsDataURL(file);
     }
-  }
 
-  async function savePackage() {
-    const title = document.getElementById('pkg-title').value.trim();
-    if (!title) { showAdminToast('請填寫套裝名稱！', '⚠️ 資料不完整'); return; }
-
-    const pkgData = {
-      title: title,
-      image: '',
-      youtube: '',
-      originalPrice: document.getElementById('pkg-originalPrice').value,
-      specialPrice: document.getElementById('pkg-specialPrice').value,
-      category: document.getElementById('pkg-category').value.trim(),
-      status: document.getElementById('pkg-status').value,
-      packageDetail: document.getElementById('pkg-detail').value.trim()
-    };
-
-    document.getElementById('btn-save-package').innerText = '⏳ 儲存中...';
-
-    try {
-      const res = await fetch(GAS_API_URL, {
-        method: 'POST',
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({
-          adminKey: adminKey,
-          action: "savePackage",
-          package: pkgData
-        })
-      });
-      const result = await res.json();
-      showAdminToast(result.message, result.success ? "✅ 儲存成功" : "❌ 儲存失敗");
-      if (result.success) loadAllData();
-    } catch (e) {
-      showAdminToast("儲存失敗: " + e.message, "❌ 儲存失敗");
-    } finally {
-      document.getElementById('btn-save-package').innerText = '💾 儲存套裝資料';
+    async function uploadBase64ToDrive(base64Data) {
+      const targetInput = document.getElementById(`${currentUploadTarget}-image`);
+      const previewImg = document.getElementById(`${currentUploadTarget}-preview`);
+      targetInput.value = "📷 照片上傳雲端中...";
+      
+      try {
+        const res = await fetch(GAS_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            adminKey: adminKey,
+            action: "uploadImage",
+            base64Data: base64Data
+          })
+        });
+        const result = await res.json();
+        if (result.success) {
+          targetInput.value = result.url;
+          previewImg.src = result.url;
+          previewImg.style.display = "block";
+          alert("✅ 照片已成功上傳至 Google Drive！");
+        } else {
+          alert("❌ 上傳失敗: " + result.message);
+          targetInput.value = "";
+        }
+      } catch(e) {
+        alert("上傳發生錯誤: " + e.message);
+        targetInput.value = "";
+      }
     }
-  }
 
-  async function saveSettings() {
-    const settingsData = {
-      '公告內容': document.getElementById('set-announcement').value.trim(),
-      'LINE連結': document.getElementById('set-line').value.trim(),
-      '滿額門檻': document.getElementById('set-threshold').value.trim(),
-      '滿額贈品': document.getElementById('set-rewards').value.trim(),
-      '主打商品': document.getElementById('set-featured').value.trim()
-    };
+    async function saveCatalogItem() {
+      const p = {
+        title: document.getElementById('cat-title').value.trim(),
+        image: document.getElementById('cat-image').value.trim(),
+        youtube: document.getElementById('cat-youtube').value.trim(),
+        originalPrice: document.getElementById('cat-orig-price').value.trim(),
+        specialPrice: document.getElementById('cat-spec-price').value.trim(),
+        category: document.getElementById('cat-category').value.trim() || '其他',
+        status: document.getElementById('cat-status').value
+      };
+      if (!p.title) return alert("請輸入商品名稱！");
 
-    document.getElementById('btn-save-set').innerText = '⏳ 儲存中...';
+      const btn = document.getElementById('btn-save-cat');
+      btn.disabled = true; btn.innerText = "⏳ 儲存中...";
 
-    try {
-      const res = await fetch(GAS_API_URL, {
-        method: 'POST',
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({
-          adminKey: adminKey,
-          action: "saveSettings",
-          settings: settingsData
-        })
-      });
-      const result = await res.json();
-      showAdminToast(result.message, result.success ? "✅ 儲存成功" : "❌ 儲存失敗");
-      if (result.success) loadAllData();
-    } catch (e) {
-      showAdminToast("儲存失敗: " + e.message, "❌ 儲存失敗");
-    } finally {
-      document.getElementById('btn-save-set').innerText = '💾 儲存網站設定';
+      try {
+        const res = await fetch(GAS_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ adminKey: adminKey, action: "saveProduct", product: p })
+        });
+        const result = await res.json();
+        alert(result.message);
+        if (result.success) loadAdminData();
+      } catch(e) { alert("儲存失敗: " + e.message); }
+      btn.disabled = false; btn.innerText = "💾 儲存單品資料";
     }
-  }
 
-  checkSavedAuth();
-</script>
+    async function savePackageItem() {
+      const pkg = {
+        title: document.getElementById('pkg-title').value.trim(),
+        packageDetail: document.getElementById('pkg-detail').value.trim(),
+        image: document.getElementById('pkg-image').value.trim(),
+        originalPrice: document.getElementById('pkg-orig-price').value.trim(),
+        specialPrice: document.getElementById('pkg-spec-price').value.trim(),
+        category: document.getElementById('pkg-category').value.trim() || '超值套裝',
+        status: document.getElementById('pkg-status').value
+      };
+      if (!pkg.title) return alert("請輸入套裝名稱！");
+
+      const btn = document.getElementById('btn-save-pkg');
+      btn.disabled = true; btn.innerText = "⏳ 儲存中...";
+
+      try {
+        const res = await fetch(GAS_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ adminKey: adminKey, action: "savePackage", package: pkg })
+        });
+        const result = await res.json();
+        alert(result.message);
+        if (result.success) loadAdminData();
+      } catch(e) { alert("儲存失敗: " + e.message); }
+      btn.disabled = false; btn.innerText = "💾 儲存套裝資料";
+    }
+
+    async function saveSettings() {
+      const s = {
+        '公告內容': document.getElementById('set-announcement').value.trim(),
+        'LINE連結': document.getElementById('set-line-url').value.trim(),
+        '滿額門檻': document.getElementById('set-threshold').value.trim(),
+        '滿額贈品': document.getElementById('set-rewards').value.trim(),
+        '主打商品': document.getElementById('set-featured').value.trim()
+      };
+
+      const btn = document.getElementById('btn-save-set');
+      btn.disabled = true; btn.innerText = "⏳ 儲存中...";
+
+      try {
+        const res = await fetch(GAS_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ adminKey: adminKey, action: "saveSettings", settings: s })
+        });
+        const result = await res.json();
+        alert(result.message);
+        if (result.success) loadAdminData();
+      } catch(e) { alert("儲存失敗: " + e.message); }
+      btn.disabled = false; btn.innerText = "💾 儲存網站設定";
+    }
+  </script>
 </body>
 </html>
