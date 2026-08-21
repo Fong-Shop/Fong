@@ -478,10 +478,11 @@
       }
     }
 
+    // 🖼️ 轉換 Google Drive 網址為防跨域阻擋的直連 CDN 格式
     function formatImageUrl(rawUrl) {
       if (!rawUrl) return '';
       let url = rawUrl.toString().trim();
-      if (url.includes('drive.google.com')) {
+      if (url.includes('drive.google.com') || url.includes('googleusercontent.com')) {
         let fileId = '';
         if (url.includes('/d/')) {
           fileId = url.split('/d/')[1].split('/')[0].split('?')[0];
@@ -489,7 +490,7 @@
           fileId = url.split('id=')[1].split('&')[0];
         }
         if (fileId) {
-          return `https://drive.google.com/uc?export=view&id=${fileId}`;
+          return `https://lh3.googleusercontent.com/d/${fileId}`;
         }
       }
       return url;
@@ -526,7 +527,7 @@
     }
 
     async function loadProducts() {
-      const cachedData = localStorage.getItem('fong_cache_v25');
+      const cachedData = localStorage.getItem('fong_cache_v27');
       if (cachedData) {
         try {
           const parsed = JSON.parse(cachedData);
@@ -602,7 +603,7 @@
         const freshDataStr = JSON.stringify(freshData);
         
         if (freshDataStr !== cachedData) {
-          localStorage.setItem('fong_cache_v25', freshDataStr);
+          localStorage.setItem('fong_cache_v27', freshDataStr);
           products = freshProducts;
           siteSettings = data.settings || {};
           parseRewardPool(siteSettings['滿額贈品']);
