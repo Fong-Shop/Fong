@@ -80,7 +80,6 @@
     .modal-list::-webkit-scrollbar { width: 6px; }
     .modal-list::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
     
-    /* 選擇器清單項目 */
     .ui-item {
       display: flex; justify-content: space-between; align-items: center;
       background: #252525; padding: 10px 12px; border-radius: 8px; border: 1px solid #333;
@@ -159,7 +158,7 @@
 
       <div class="form-group"><label>商品名稱：</label><input type="text" id="p-title" placeholder="名稱"></div>
       <div class="form-group">
-        <label>圖片檔名 / 網址：<button class="btn-action" onclick="triggerCamera('p-image')">📷 拍照上傳</button></label>
+        <label>圖片檔名 / 網址：<button class="btn-action" onclick="triggerCamera('p-image')">📷 拍照/選圖</button></label>
         <input type="text" id="p-image" placeholder="https://...">
         <div class="image-preview-container">
           <img id="p-image-preview" class="img-preview" alt="預覽"><span id="p-image-status" style="font-size:0.8rem; color:#aaa;"></span>
@@ -223,15 +222,15 @@
 
   </div>
 
-  <!-- 📷 隱藏式拍照強制只能呼叫相機 -->
-  <input type="file" id="camera-file-input" accept="image/*" capture="environment" style="display: none;" onchange="handleCameraUpload(this)">
+  <!-- 📷 檔案選擇器 (可拍照也可進相簿選圖) -->
+  <input type="file" id="camera-file-input" accept="image/*" style="display: none;" onchange="handleCameraUpload(this)">
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxN7ajFAw2gJgMCimLnCGdZ-PZ2TRjwo-JTaRVQj6K_sT1HMxYST_I2Z__n0QXkEyO_uQ/exec";
   let adminKey = "";
   let siteData = { products: [], packages: [], settings: {} };
   let currentUploadTarget = "";
-  let currentUIType = ""; // 'package', 'reward', 'featured'
+  let currentUIType = "";
 
   function checkSavedAuth() {
     if (localStorage.getItem('fong_admin_key')) {
@@ -256,11 +255,13 @@
     try {
       const res = await fetch(GAS_API_URL + '?t=' + new Date().getTime());
       const data = await res.json();
-      if (data.error) return alert("後端傳回錯誤：" + data.error);
+      if (!data.success && data.error) return alert("後端傳回錯誤：" + data.error);
       siteData = data;
       renderDropdowns();
       fillSettingsForm();
-    } catch (e) { alert("讀取後台資料失敗: " + e.message); }
+    } catch (e) { 
+      alert("讀取資料失敗 (Failed to fetch)！\n請檢查 GAS 部署權限：『誰可以存取』必須設定為【所有人 (Anyone)】！"); 
+    }
   }
 
   function renderDropdowns() {
@@ -282,7 +283,6 @@
     document.getElementById(`sec-${tab}`).style.display = 'block';
   }
 
-  /* --- 表單資料填寫 --- */
   function fillProductForm() {
     const idx = document.getElementById('select-product').value;
     const actRow = document.getElementById('action-row-product');
@@ -331,7 +331,7 @@
     document.getElementById('set-featured').value = s['主打商品'] || '';
   }
 
-  /* --- 📷 拍照上傳 (強制相機) --- */
+  /* --- 📷 拍照 / 相簿選圖 --- */
   function triggerCamera(targetInputId) {
     currentUploadTarget = targetInputId;
     document.getElementById('camera-file-input').click();
@@ -341,10 +341,10 @@
     if (!input.files || !input.files[0]) return;
     const file = input.files[0];
     const statusSpan = document.getElementById('p-image-status');
-    statusSpan.innerText = '📷 圖片壓縮處理中...';
+    statusSpan.innerText = '📷 圖片壓縮中...';
 
     const base64 = await compressImage(file, 1024, 0.8);
-    statusSpan.innerText = '🚀 正在上傳至專屬資料夾...';
+    statusSpan.innerText = '🚀 正在上傳至雲端相簿...';
 
     try {
       const res = await fetch(GAS_API_URL, {
@@ -378,7 +378,6 @@
     });
   }
 
-  /* --- 🚀 API 呼叫共用函式 --- */
   async function callAPI(action, payload) {
     payload.adminKey = adminKey;
     payload.action = action;
@@ -389,13 +388,12 @@
     return res.json();
   }
 
-  /* --- 🗑️ 刪除與移動 --- */
   async function callItemAPI(type, action, direction = null) {
     const titleId = type === 'product' ? 'p-title' : 'pkg-title';
     const title = document.getElementById(titleId).value.trim();
     if (!title) return alert("請先選擇項目！");
     
-    if (action === 'deleteItem' && !confirm(`確定要刪除「${title}」嗎？此操作無法還原！`)) return;
+    if (action === 'deleteItem' && !confirm(`確定要刪除「${title}」嗎？`)) return;
 
     try {
       const result = await callAPI(action, { type: type, title: title, direction: direction });
@@ -408,7 +406,6 @@
     } catch (e) { alert("錯誤：" + e.message); }
   }
 
-  /* --- 💾 儲存資料 --- */
   async function saveProduct() {
     const title = document.getElementById('p-title').value.trim();
     if (!title) return alert('請填寫商品名稱！');
@@ -463,7 +460,7 @@
     } catch(e) {} finally { document.getElementById('btn-save-set').innerText = '💾 儲存設定'; }
   }
 
-  /* --- 🎨 視覺化選擇器 (Modal UI) --- */
+  /* --- 🎨 視覺化選擇器 --- */
   function closeUIModal() { document.getElementById('ui-modal').style.display = 'none'; }
   
   function parseCurrentStr(str, isPoints = false) {
@@ -474,7 +471,7 @@
       if (parts.length === 2) {
         dict[parts[0].trim()] = isPoints ? parseFloat(parts[1]) : parseInt(parts[1]);
       } else {
-        dict[s.trim()] = isPoints ? 0 : 1; // For featured checkboxes
+        dict[s.trim()] = isPoints ? 0 : 1;
       }
     });
     return dict;
