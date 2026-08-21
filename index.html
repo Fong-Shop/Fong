@@ -26,6 +26,7 @@
       text-align: center;
       padding: 10px 0 16px 0;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
+      cursor: pointer; user-select: none;
     }
     .brand-logo-wrap {
       display: inline-flex; align-items: center; gap: 8px;
@@ -321,8 +322,8 @@
 </head>
 <body>
 
-  <!-- 🎇 頂部品牌 Header / LOGO -->
-  <header class="brand-header">
+  <!-- 🎇 頂部品牌 Header / LOGO (點擊 5 下觸發秘密後台) -->
+  <header class="brand-header" id="brand-header-logo" onclick="handleLogoClick()">
     <div class="brand-logo-wrap">
       <h1 class="brand-title">✨ FONG 煙火精選 ✨</h1>
     </div>
@@ -463,6 +464,20 @@
     let currentCategory = '全部'; 
     let hasShownAdThisLoad = false; 
 
+    // 🔑 LOGO 點擊 5 下跳轉後台
+    let logoClickCount = 0;
+    let logoClickTimer = null;
+    function handleLogoClick() {
+      logoClickCount++;
+      clearTimeout(logoClickTimer);
+      if (logoClickCount >= 5) {
+        logoClickCount = 0;
+        window.location.href = "admin.html";
+      } else {
+        logoClickTimer = setTimeout(() => { logoClickCount = 0; }, 1500);
+      }
+    }
+
     function formatImageUrl(rawUrl) {
       if (!rawUrl) return '';
       let url = rawUrl.toString().trim();
@@ -488,7 +503,6 @@
       return `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
     }
 
-    // 💡 讀取商品與自選禮暫存
     function loadSavedCart() {
       const savedCart = localStorage.getItem('fong_shopping_cart');
       if (savedCart) {
@@ -506,7 +520,6 @@
       }
     }
 
-    // 💡 儲存商品與自選禮暫存
     function saveCart() {
       localStorage.setItem('fong_shopping_cart', JSON.stringify(selectedItems));
       localStorage.setItem('fong_shopping_rewards', JSON.stringify(selectedRewards));
@@ -932,7 +945,6 @@
       return parseFloat(usedPts.toFixed(2));
     }
 
-    // 💡 滿額自選禮膠囊動態更新（包含「差多少金額」與「引導點此挑選」）
     function updateCartUI() {
       const count = Object.keys(selectedItems).length;
       const cartBtn = document.getElementById('floating-cart');
@@ -952,7 +964,6 @@
         
         const earnedPts = Math.floor(totalPrice / threshold);
         
-        // 💡 防呆檢查：若總金額降低導致擁有點數小於已選點數，自動重整扣除超額贈品
         let usedPts = getUsedRewardPoints();
         if (usedPts > earnedPts) {
           for (let name in selectedRewards) {
@@ -984,7 +995,6 @@
       }
     }
 
-    // 🎁 自選禮兌換視窗
     function openRewardSelectModal() {
       const totalPrice = calculateCartTotal();
       const threshold = parseInt(siteSettings['滿額門檻']) || 0;
@@ -1059,7 +1069,7 @@
         selectedRewards[name] = newQty;
       }
 
-      saveCart(); // 即時存入 LocalStorage
+      saveCart();
 
       const qtySpan = document.getElementById(`reward-qty-${name}`);
       if (qtySpan) qtySpan.innerText = newQty;
