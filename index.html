@@ -460,12 +460,9 @@
     let currentCategory = '全部'; 
     let hasShownAdThisLoad = false; 
 
-    // 💡 智慧圖片網址解析（支援 Google Drive 分享連結、外鏈圖床與 GitHub 本地檔名）
     function formatImageUrl(rawUrl) {
       if (!rawUrl) return '';
       let url = rawUrl.toString().trim();
-      
-      // 如果是 Google Drive 分享網址，自動轉為直連格式
       if (url.includes('drive.google.com')) {
         let fileId = '';
         if (url.includes('/d/')) {
@@ -503,7 +500,7 @@
     }
 
     async function loadProducts() {
-      const cachedData = localStorage.getItem('fong_cache_v21');
+      const cachedData = localStorage.getItem('fong_cache_v22');
       if (cachedData) {
         try {
           const parsed = JSON.parse(cachedData);
@@ -529,20 +526,7 @@
         const catalogItems = data.products || [];
         const packageItems = data.packages || [];
 
-        catalogItems.forEach(item => {
-          if (!item['商品名稱']) return;
-          freshProducts.push({
-            title: item['商品名稱'] || '',
-            image: formatImageUrl(item['圖片檔名'] || ''),
-            youtube: item['影片網址'] || '',
-            originalPrice: item['原價'] || '',
-            specialPrice: item['特價'] || '',
-            status: item['狀態'] || '',
-            category: item['分類'] || '其他',
-            isPackage: false
-          });
-        });
-
+        // 💡 1. 優先加入「套裝商品」（確保套裝卡片排在「全部」最上方）
         packageItems.forEach(item => {
           if (!item['商品名稱']) return;
           const detail = item['包含內容'] || '';
@@ -554,9 +538,9 @@
               const match = pStr.match(/^(.*?)\s*[*xX]\s*(\d+(\.\d+)?)$/);
               const pName = match ? match[1].trim() : pStr;
               const pQty = match ? parseFloat(match[2]) : 1;
-              const target = freshProducts.find(p => p.title === pName);
+              const target = catalogItems.find(p => p['商品名稱'] === pName);
               if (target) {
-                const singlePrice = parseInt(target.originalPrice) || parseInt(target.specialPrice) || 0;
+                const singlePrice = parseInt(target['原價']) || parseInt(target['特價']) || 0;
                 calcOriginalPrice += singlePrice * pQty;
               }
             });
@@ -575,11 +559,26 @@
           });
         });
 
+        // 💡 2. 再加入一般單品
+        catalogItems.forEach(item => {
+          if (!item['商品名稱']) return;
+          freshProducts.push({
+            title: item['商品名稱'] || '',
+            image: formatImageUrl(item['圖片檔名'] || ''),
+            youtube: item['影片網址'] || '',
+            originalPrice: item['原價'] || '',
+            specialPrice: item['特價'] || '',
+            status: item['狀態'] || '',
+            category: item['分類'] || '其他',
+            isPackage: false
+          });
+        });
+
         const freshData = { products: freshProducts, settings: data.settings };
         const freshDataStr = JSON.stringify(freshData);
         
         if (freshDataStr !== cachedData) {
-          localStorage.setItem('fong_cache_v21', freshDataStr);
+          localStorage.setItem('fong_cache_v22', freshDataStr);
           products = freshProducts;
           siteSettings = data.settings || {};
           parseRewardPool(siteSettings['滿額贈品']);
@@ -963,7 +962,6 @@
       }
     }
 
-    // 🎁 自選禮兌換視窗
     function openRewardSelectModal() {
       const totalPrice = calculateCartTotal();
       const threshold = parseInt(siteSettings['滿額門檻']) || 0;
