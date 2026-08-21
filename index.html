@@ -337,16 +337,19 @@
     </div>
   </div>
 
-  <!-- 🎁 自選禮兌換挑選視窗 -->
+<!-- 🎁 自選禮兌換挑選視窗 -->
   <div class="popup-overlay" id="reward-select-modal" style="z-index: 2200;">
     <div class="popup-content" style="max-width: 480px; padding: 20px;">
       <div class="popup-close" onclick="closeRewardSelectModal()">✖</div>
       <div class="popup-title" style="color:#ffcc00; margin-bottom:4px;">🎁 滿額自選禮兌換池</div>
       
-      <div style="font-size:0.85rem; color:#aaa; margin-bottom:12px;">
+      <div style="font-size:0.85rem; color:#aaa; margin-bottom:4px;">
         目前擁有：<span id="modal-total-pts" style="color:#28a745; font-weight:bold; font-size:1.1rem;">0</span> 點 | 
         已使用：<span id="modal-used-pts" style="color:#ff4d4d; font-weight:bold; font-size:1.1rem;">0</span> 點
       </div>
+
+      <!-- 👇 新增這行標語 👇 -->
+      <div style="font-size:0.75rem; color:#ff9900; margin-bottom:12px;">⚠️ 提醒：滿額贈品點數僅限當次訂單兌換完畢，不予累計至下次使用</div>
 
       <div class="popup-items-wrapper" id="reward-options-container" style="max-height: 52vh; margin-bottom: 12px;"></div>
 
@@ -1116,6 +1119,7 @@
               </button>
             </div>
             ${chosenListStr ? `<div style="color:#28a745; font-size:0.8rem; margin-top:4px;">🎁 目前已選：${chosenListStr}</div>` : `<div style="color:#ff4d4d; font-size:0.8rem; margin-top:4px;">⚠️ 尚未挑選自選禮，可點上方按鈕自選！</div>`}
+            <div style="color:#888; font-size:0.72rem; margin-top:4px;">* 點數僅限當次訂單兌換</div>
           `;
         } else {
           rewardHint.innerHTML = `💡 還差 NT$${neededForNext} 即可獲得 1 點自選好禮！`;
