@@ -460,7 +460,7 @@
           fileId = url.split('id=')[1].split('&')[0];
         }
         if (fileId) {
-          return `https://drive.google.com/uc?export=view&id=${fileId}`;
+          return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
         }
       }
       return url;
@@ -500,7 +500,7 @@
       // 👁️ 紀錄前台訪客造訪與 IP
       recordVisit('前台購物目錄');
 
-      const cachedData = localStorage.getItem('fong_cache_v27');
+      const cachedData = localStorage.getItem('fong_cache_v28');
       if (cachedData) {
         try {
           const parsed = JSON.parse(cachedData);
@@ -582,7 +582,7 @@
         const freshData = { products: freshProducts, settings: data.settings };
         const freshDataStr = JSON.stringify(freshData);
         
-        localStorage.setItem('fong_cache_v27', freshDataStr);
+        localStorage.setItem('fong_cache_v28', freshDataStr);
         products = freshProducts;
         siteSettings = data.settings || {};
         parseRewardPool(siteSettings['滿額贈品']);
