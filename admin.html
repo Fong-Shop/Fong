@@ -94,7 +94,7 @@
       width: 100%; max-width: 480px; background: #1a1a1a; border-radius: 12px;
       padding: 20px; border: 2px solid #ffcc00; display: flex; flex-direction: column; max-height: 85vh;
     }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .modal-title { font-size: 1.15rem; font-weight: bold; color: #ffcc00; margin: 0; }
     .modal-close { font-size: 1.5rem; color: #fff; cursor: pointer; line-height: 1; }
     
@@ -102,6 +102,13 @@
     .modal-list::-webkit-scrollbar { width: 6px; }
     .modal-list::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
     
+    /* 💰 實時金額計算提示框 */
+    .price-summary-badge {
+      background: #252210; border: 1px solid #ffcc00; border-radius: 8px;
+      padding: 10px; margin-bottom: 12px; text-align: center; font-size: 1rem;
+      color: #ffcc00; font-weight: bold; display: none;
+    }
+
     .drag-item {
       display: flex; justify-content: space-between; align-items: center;
       background: #252525; padding: 10px 12px; border-radius: 8px; border: 1px solid #333;
@@ -159,6 +166,10 @@
       <div class="modal-header">
         <h3 class="modal-title" id="ui-modal-title">編輯項目</h3>
         <div class="modal-close" onclick="closeUIModal()">×</div>
+      </div>
+      <!-- 💰 動態計算顯示條 -->
+      <div class="price-summary-badge" id="ui-price-summary">
+        💰 目前組合內含單品原價總計：<span id="ui-total-val" style="font-size:1.2rem; color:#28a745;">NT$0</span>
       </div>
       <div class="modal-list" id="ui-modal-list"></div>
       <button class="btn-submit" id="ui-modal-save-btn" style="margin-top: 0; background: #ff9900; color: #000;" onclick="saveUISelection()">✅ 確認儲存</button>
@@ -241,7 +252,10 @@
         <textarea id="pkg-detail" disabled placeholder="點上方按鈕自動生成"></textarea>
       </div>
       <div style="display:flex; gap:10px;">
-        <div class="form-group" style="flex:1;"><label>原價 (可留空)：</label><input type="number" id="pkg-originalPrice"></div>
+        <div class="form-group" style="flex:1;">
+          <label>原價 (自動計算金額)：</label>
+          <input type="number" id="pkg-originalPrice" placeholder="自動計算總價">
+        </div>
         <div class="form-group" style="flex:1;"><label>特價：</label><input type="number" id="pkg-specialPrice"></div>
       </div>
       <div style="display:flex; gap:10px;">
@@ -293,7 +307,6 @@
     const inputKey = document.getElementById('input-admin-key').value.trim();
     if (!inputKey) return alert('請輸入密碼！');
 
-    // 🔒 雙重驗證的第一重：登入時先向 GAS 傳送密碼比對
     try {
       const res = await fetch(GAS_API_URL, {
         method: 'POST',
@@ -359,6 +372,24 @@
     document.getElementById(`sec-${tab}`).style.display = 'block';
   }
 
+  // 💡 計算組合套裝內容的原價總和
+  function calculateDetailTotalSum(detailStr) {
+    if (!detailStr) return 0;
+    let sum = 0;
+    const parts = detailStr.split(/[,，、]/).map(s => s.trim()).filter(Boolean);
+    parts.forEach(pStr => {
+      const match = pStr.match(/^(.*?)\s*[*xX]\s*(\d+(\.\d+)?)$/);
+      const pName = match ? match[1].trim() : pStr;
+      const pQty = match ? parseFloat(match[2]) : 1;
+      const target = (siteData.products || []).find(p => p['商品名稱'] === pName);
+      if (target) {
+        const unitPrice = parseInt(target['原價']) || parseInt(target['特價']) || 0;
+        sum += unitPrice * pQty;
+      }
+    });
+    return sum;
+  }
+
   /* --- 表單資料填寫 --- */
   function fillProductForm() {
     const idx = document.getElementById('select-product').value;
@@ -393,9 +424,15 @@
     } else {
       delBtn.style.display = 'inline-block';
       const pkg = siteData.packages[idx];
-      document.getElementById('pkg-title').value = pkg['商品名稱']; document.getElementById('pkg-detail').value = pkg['包含內容'];
-      document.getElementById('pkg-originalPrice').value = pkg['原價']; document.getElementById('pkg-specialPrice').value = pkg['特價'];
-      document.getElementById('pkg-category').value = pkg['分類'] || '超值套裝'; document.getElementById('pkg-status').value = pkg['狀態'];
+      const detailStr = pkg['包含內容'] || '';
+      document.getElementById('pkg-title').value = pkg['商品名稱']; 
+      document.getElementById('pkg-detail').value = detailStr;
+      
+      const calcPrice = calculateDetailTotalSum(detailStr);
+      document.getElementById('pkg-originalPrice').value = pkg['原價'] ? pkg['原價'] : (calcPrice > 0 ? calcPrice : '');
+      document.getElementById('pkg-specialPrice').value = pkg['特價']; 
+      document.getElementById('pkg-category').value = pkg['分類'] || '超值套裝'; 
+      document.getElementById('pkg-status').value = pkg['狀態'];
     }
   }
 
@@ -408,7 +445,7 @@
     document.getElementById('set-featured').value = s['主打商品'] || '';
   }
 
-  /* --- 📷 拍照 / 🖼️ 選圖分離控制 --- */
+  /* --- 📷 拍照 / 🖼️ 選圖 --- */
   function triggerPhoto(mode, targetInputId) {
     currentUploadTarget = targetInputId;
     if (mode === 'camera') {
@@ -541,13 +578,17 @@
     } catch(e) {} finally { document.getElementById('btn-save-set').innerText = '💾 儲存設定'; }
   }
 
-  /* --- 🔃 拖曳與快速排序模式 --- */
-  function closeUIModal() { document.getElementById('ui-modal').style.display = 'none'; }
+  /* --- 🔃 拖曳與排序模式 --- */
+  function closeUIModal() { 
+    document.getElementById('ui-price-summary').style.display = 'none';
+    document.getElementById('ui-modal').style.display = 'none'; 
+  }
 
   function openSortEditor(type) {
     currentUIType = 'sort_' + type;
+    document.getElementById('ui-price-summary').style.display = 'none';
     const isProd = type === 'product';
-    document.getElementById('ui-modal-title').innerText = isProd ? '🔃 編輯單品順序 (可拖曳或快速移動)' : '🔃 編輯套裝順序 (可拖曳或快速移動)';
+    document.getElementById('ui-modal-title').innerText = isProd ? '🔃 編輯單品順序 (拖曳或按上下標)' : '🔃 編輯套裝順序 (拖曳或按上下標)';
     
     const list = isProd ? siteData.products : siteData.packages;
     let html = '';
@@ -590,8 +631,10 @@
     items.forEach((item, idx) => {
       item.setAttribute('data-index', idx);
       const btns = item.querySelectorAll('.drag-btn');
-      btns[0].setAttribute('onclick', `moveSortItem(${idx}, -1)`);
-      btns[1].setAttribute('onclick', `moveSortItem(${idx}, 1)`);
+      if (btns && btns.length === 2) {
+        btns[0].setAttribute('onclick', `moveSortItem(${idx}, -1)`);
+        btns[1].setAttribute('onclick', `moveSortItem(${idx}, 1)`);
+      }
     });
   }
 
@@ -664,15 +707,30 @@
   function parseCurrentStr(str, isPoints = false) {
     const dict = {};
     if (!str) return dict;
-    str.split(',').forEach(s => {
+    str.split(/[,，、]/).forEach(s => {
       const parts = s.split('*');
       if (parts.length === 2) {
         dict[parts[0].trim()] = isPoints ? parseFloat(parts[1]) : parseInt(parts[1]);
-      } else {
+      } else if (s.trim()) {
         dict[s.trim()] = isPoints ? 0 : 1;
       }
     });
     return dict;
+  }
+
+  function updateModalLiveTotal() {
+    if (currentUIType !== 'package') return;
+    let liveSum = 0;
+    siteData.products.forEach(p => {
+      const title = p['商品名稱'];
+      const el = document.getElementById(`ui-val-${title}`);
+      if (el) {
+        const qty = parseInt(el.value) || 0;
+        const unitPrice = parseInt(p['原價']) || parseInt(p['特價']) || 0;
+        liveSum += qty * unitPrice;
+      }
+    });
+    document.getElementById('ui-total-val').innerText = `NT$${liveSum}`;
   }
 
   function modifyUIValue(title, delta, isPoints) {
@@ -686,11 +744,13 @@
       val = Math.max(0, val + delta);
       input.value = val;
     }
+    updateModalLiveTotal();
   }
 
   function openPackageEditor() {
     currentUIType = 'package';
     document.getElementById('ui-modal-title').innerText = '📦 編輯套裝內容';
+    document.getElementById('ui-price-summary').style.display = 'block';
     document.getElementById('ui-modal-save-btn').onclick = saveUISelection;
     const currentDict = parseCurrentStr(document.getElementById('pkg-detail').value);
     
@@ -698,24 +758,27 @@
     siteData.products.forEach(p => {
       if(p['狀態'] === 'N') return;
       const title = p['商品名稱'];
+      const unitPrice = parseInt(p['原價']) || parseInt(p['特價']) || 0;
       const qty = currentDict[title] || 0;
       html += `
         <div class="ui-item">
-          <div class="ui-item-title">${title}</div>
+          <div class="ui-item-title">${title} <span style="font-size:0.75rem; color:#aaa;">(NT$${unitPrice})</span></div>
           <div class="ui-controls">
             <button class="qty-btn" onclick="modifyUIValue('${title}', -1, false)">-</button>
-            <input type="number" class="qty-input" id="ui-val-${title}" value="${qty}" min="0">
+            <input type="number" class="qty-input" id="ui-val-${title}" value="${qty}" min="0" oninput="updateModalLiveTotal()">
             <button class="qty-btn" onclick="modifyUIValue('${title}', 1, false)">+</button>
           </div>
         </div>`;
     });
     document.getElementById('ui-modal-list').innerHTML = html;
+    updateModalLiveTotal();
     document.getElementById('ui-modal').style.display = 'flex';
   }
 
   function openRewardEditor() {
     currentUIType = 'reward';
     document.getElementById('ui-modal-title').innerText = '🎁 編輯滿額贈品與點數';
+    document.getElementById('ui-price-summary').style.display = 'none';
     document.getElementById('ui-modal-save-btn').onclick = saveUISelection;
     const currentDict = parseCurrentStr(document.getElementById('set-rewards').value, true);
     
@@ -741,6 +804,7 @@
   function openFeaturedEditor() {
     currentUIType = 'featured';
     document.getElementById('ui-modal-title').innerText = '🔥 勾選主打推播商品';
+    document.getElementById('ui-price-summary').style.display = 'none';
     document.getElementById('ui-modal-save-btn').onclick = saveUISelection;
     const currentDict = parseCurrentStr(document.getElementById('set-featured').value);
     
@@ -767,7 +831,12 @@
         const title = p['商品名稱']; const el = document.getElementById(`ui-val-${title}`);
         if(el && parseInt(el.value) > 0) resultArr.push(`${title}*${parseInt(el.value)}`);
       });
-      document.getElementById('pkg-detail').value = resultArr.join(', ');
+      const detailStr = resultArr.join(', ');
+      document.getElementById('pkg-detail').value = detailStr;
+      
+      // 💡 點擊確認後，自動將算出的總額帶入表單的原價欄位
+      const calculatedSum = calculateDetailTotalSum(detailStr);
+      document.getElementById('pkg-originalPrice').value = calculatedSum > 0 ? calculatedSum : '';
     } 
     else if (currentUIType === 'reward') {
       siteData.products.forEach(p => {
