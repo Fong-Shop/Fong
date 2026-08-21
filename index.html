@@ -488,6 +488,7 @@
       return `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
     }
 
+    // 💡 讀取商品與自選禮暫存
     function loadSavedCart() {
       const savedCart = localStorage.getItem('fong_shopping_cart');
       if (savedCart) {
@@ -496,14 +497,23 @@
           Object.assign(selectedItems, parsed);
         } catch (e) { console.error('購物車讀取失敗'); }
       }
+      const savedRewards = localStorage.getItem('fong_shopping_rewards');
+      if (savedRewards) {
+        try {
+          const parsedR = JSON.parse(savedRewards);
+          Object.assign(selectedRewards, parsedR);
+        } catch (e) { console.error('自選禮讀取失敗'); }
+      }
     }
 
+    // 💡 儲存商品與自選禮暫存
     function saveCart() {
       localStorage.setItem('fong_shopping_cart', JSON.stringify(selectedItems));
+      localStorage.setItem('fong_shopping_rewards', JSON.stringify(selectedRewards));
     }
 
     async function loadProducts() {
-      const cachedData = localStorage.getItem('fong_cache_v24');
+      const cachedData = localStorage.getItem('fong_cache_v25');
       if (cachedData) {
         try {
           const parsed = JSON.parse(cachedData);
@@ -579,7 +589,7 @@
         const freshDataStr = JSON.stringify(freshData);
         
         if (freshDataStr !== cachedData) {
-          localStorage.setItem('fong_cache_v24', freshDataStr);
+          localStorage.setItem('fong_cache_v25', freshDataStr);
           products = freshProducts;
           siteSettings = data.settings || {};
           parseRewardPool(siteSettings['滿額贈品']);
@@ -941,7 +951,17 @@
         rewardPill.style.display = 'flex';
         
         const earnedPts = Math.floor(totalPrice / threshold);
-        const usedPts = getUsedRewardPoints();
+        
+        // 💡 防呆檢查：若總金額降低導致擁有點數小於已選點數，自動重整扣除超額贈品
+        let usedPts = getUsedRewardPoints();
+        if (usedPts > earnedPts) {
+          for (let name in selectedRewards) {
+            delete selectedRewards[name];
+          }
+          saveCart();
+          usedPts = 0;
+        }
+
         const currentLevelProgress = totalPrice % threshold;
         const percent = Math.min(100, Math.floor((currentLevelProgress / threshold) * 100));
         const neededForNext = threshold - currentLevelProgress;
@@ -949,7 +969,6 @@
         document.getElementById('bottom-reward-bar').style.width = (earnedPts > 0 && currentLevelProgress === 0 ? 100 : percent) + '%';
         
         if (earnedPts > 0) {
-          // 👉 已有點數：左邊顯示引導「👉 點此挑選」，右邊持續顯示「差 $多少 再贈1點」
           document.getElementById('bottom-reward-title').innerText = `👉 點此挑選 (${usedPts}/${earnedPts}點)`;
           if (neededForNext === threshold) {
             document.getElementById('bottom-reward-status').innerHTML = `<span style="color:#28a745; font-weight:bold;">🎉 已達標</span>`;
@@ -957,7 +976,6 @@
             document.getElementById('bottom-reward-status').innerHTML = `差 $${neededForNext} 再贈1點`;
           }
         } else {
-          // 🎁 未達標：左邊顯示「滿$門檻 自選禮」，右邊顯示「差 $多少」
           document.getElementById('bottom-reward-title').innerText = `🎁 滿$${threshold} 自選禮`;
           document.getElementById('bottom-reward-status').innerHTML = `差 NT$${neededForNext}`;
         }
@@ -1010,6 +1028,7 @@
 
     function closeRewardSelectModal() {
       document.getElementById('reward-select-modal').style.display = 'none';
+      saveCart();
       updateCartUI();
       if (document.getElementById('cart-modal-overlay').style.display === 'flex') {
         renderCartItems();
@@ -1039,6 +1058,8 @@
       } else {
         selectedRewards[name] = newQty;
       }
+
+      saveCart(); // 即時存入 LocalStorage
 
       const qtySpan = document.getElementById(`reward-qty-${name}`);
       if (qtySpan) qtySpan.innerText = newQty;
