@@ -138,29 +138,29 @@
     .bottom-reward-pill {
       position: fixed; bottom: 82px; left: 50%; transform: translateX(-50%);
       width: calc(100% - 130px); max-width: 280px;
-      background-color: rgba(0, 0, 0, 0.85);
-      color: #fff; border: 1px solid #ffcc00; padding: 8px 14px;
+      background-color: rgba(20, 20, 20, 0.95);
+      color: #fff; border: 1px solid #ffcc00; padding: 7px 14px;
       border-radius: 20px; font-size: 0.8rem; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-      display: none; flex-direction: column; gap: 5px; backdrop-filter: blur(5px);
+      display: none; flex-direction: column; gap: 4px; backdrop-filter: blur(5px);
       z-index: 1000; cursor: pointer; transition: transform 0.2s;
     }
     .bottom-reward-pill:hover { transform: translateX(-50%) scale(1.03); border-color: #fff; }
     .bottom-reward-text-row {
-      display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;
+      display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem;
     }
     .bottom-reward-progress-bg {
-      width: 100%; height: 6px; background: #333; border-radius: 3px; overflow: hidden;
+      width: 100%; height: 5px; background: #333; border-radius: 3px; overflow: hidden;
     }
     .bottom-reward-progress-fill {
-      width: 0%; height: 100%; background: linear-gradient(90deg, #ff9900, #ff4d4d); transition: width 0.3s ease;
+      width: 0%; height: 100%; background: linear-gradient(90deg, #ff9900, #28a745); transition: width 0.3s ease;
     }
 
-    /* 🛒 獨立底部結帳按鈕（增強視覺強調） */
+    /* 🛒 獨立底部結帳按鈕 */
     .floating-cart {
       position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%);
       width: calc(100% - 90px); max-width: 320px;
-      background-color: #06C755; color: #fff; padding: 15px 20px;
-      border-radius: 50px; cursor: pointer; font-size: 1.15rem; font-weight: 800;
+      background-color: #06C755; color: #fff; padding: 14px 20px;
+      border-radius: 50px; cursor: pointer; font-size: 1.1rem; font-weight: 800;
       box-shadow: 0 6px 20px rgba(6, 199, 85, 0.4); display: none; text-align: center;
       transition: transform 0.2s; white-space: nowrap; z-index: 1000;
       text-shadow: 0 1px 2px rgba(0,0,0,0.2);
@@ -503,7 +503,7 @@
     }
 
     async function loadProducts() {
-      const cachedData = localStorage.getItem('fong_cache_v23');
+      const cachedData = localStorage.getItem('fong_cache_v24');
       if (cachedData) {
         try {
           const parsed = JSON.parse(cachedData);
@@ -579,7 +579,7 @@
         const freshDataStr = JSON.stringify(freshData);
         
         if (freshDataStr !== cachedData) {
-          localStorage.setItem('fong_cache_v23', freshDataStr);
+          localStorage.setItem('fong_cache_v24', freshDataStr);
           products = freshProducts;
           siteSettings = data.settings || {};
           parseRewardPool(siteSettings['滿額贈品']);
@@ -922,6 +922,7 @@
       return parseFloat(usedPts.toFixed(2));
     }
 
+    // 💡 滿額自選禮膠囊動態更新（包含「差多少金額」與「引導點此挑選」）
     function updateCartUI() {
       const count = Object.keys(selectedItems).length;
       const cartBtn = document.getElementById('floating-cart');
@@ -947,13 +948,18 @@
 
         document.getElementById('bottom-reward-bar').style.width = (earnedPts > 0 && currentLevelProgress === 0 ? 100 : percent) + '%';
         
-        // 💡 滿額門檻動態顯示
-        document.getElementById('bottom-reward-title').innerText = `🎁 滿$${threshold} 自選禮`;
-        
         if (earnedPts > 0) {
-          document.getElementById('bottom-reward-status').innerHTML = `<span style="color:#28a745; font-weight:bold;">${usedPts}/${earnedPts}點 ➔</span>`;
+          // 👉 已有點數：左邊顯示引導「👉 點此挑選」，右邊持續顯示「差 $多少 再贈1點」
+          document.getElementById('bottom-reward-title').innerText = `👉 點此挑選 (${usedPts}/${earnedPts}點)`;
+          if (neededForNext === threshold) {
+            document.getElementById('bottom-reward-status').innerHTML = `<span style="color:#28a745; font-weight:bold;">🎉 已達標</span>`;
+          } else {
+            document.getElementById('bottom-reward-status').innerHTML = `差 $${neededForNext} 再贈1點`;
+          }
         } else {
-          document.getElementById('bottom-reward-status').innerHTML = `差 <strong>NT$${neededForNext}</strong>`;
+          // 🎁 未達標：左邊顯示「滿$門檻 自選禮」，右邊顯示「差 $多少」
+          document.getElementById('bottom-reward-title').innerText = `🎁 滿$${threshold} 自選禮`;
+          document.getElementById('bottom-reward-status').innerHTML = `差 NT$${neededForNext}`;
         }
       } else {
         rewardPill.style.display = 'none';
