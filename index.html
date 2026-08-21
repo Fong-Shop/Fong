@@ -136,35 +136,36 @@
 
     /* 🎁 獨立滿額自選禮膠囊 */
     .bottom-reward-pill {
-      position: fixed; bottom: 78px; left: 50%; transform: translateX(-50%);
-      width: calc(100% - 130px); max-width: 260px;
-      background-color: rgba(20, 20, 20, 0.95);
-      color: #fff; border: 1px solid #ffcc00; padding: 6px 12px;
-      border-radius: 20px; font-size: 0.78rem; box-shadow: 0 4px 12px rgba(0,0,0,0.35);
-      display: none; flex-direction: column; gap: 4px; backdrop-filter: blur(4px);
+      position: fixed; bottom: 82px; left: 50%; transform: translateX(-50%);
+      width: calc(100% - 130px); max-width: 280px;
+      background-color: rgba(0, 0, 0, 0.85);
+      color: #fff; border: 1px solid #ffcc00; padding: 8px 14px;
+      border-radius: 20px; font-size: 0.8rem; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      display: none; flex-direction: column; gap: 5px; backdrop-filter: blur(5px);
       z-index: 1000; cursor: pointer; transition: transform 0.2s;
     }
     .bottom-reward-pill:hover { transform: translateX(-50%) scale(1.03); border-color: #fff; }
     .bottom-reward-text-row {
-      display: flex; justify-content: space-between; align-items: center; font-size: 0.76rem;
+      display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;
     }
     .bottom-reward-progress-bg {
-      width: 100%; height: 5px; background: #333; border-radius: 3px; overflow: hidden;
+      width: 100%; height: 6px; background: #333; border-radius: 3px; overflow: hidden;
     }
     .bottom-reward-progress-fill {
-      width: 0%; height: 100%; background: linear-gradient(90deg, #ff9900, #28a745); transition: width 0.3s ease;
+      width: 0%; height: 100%; background: linear-gradient(90deg, #ff9900, #ff4d4d); transition: width 0.3s ease;
     }
 
-    /* 🛒 獨立底部結帳按鈕 */
+    /* 🛒 獨立底部結帳按鈕（增強視覺強調） */
     .floating-cart {
-      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-      width: calc(100% - 90px); max-width: 300px;
-      background-color: #06C755; color: #fff; padding: 13px 20px;
-      border-radius: 50px; cursor: pointer; font-size: 1rem; font-weight: bold;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35); display: none; text-align: center;
+      position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%);
+      width: calc(100% - 90px); max-width: 320px;
+      background-color: #06C755; color: #fff; padding: 15px 20px;
+      border-radius: 50px; cursor: pointer; font-size: 1.15rem; font-weight: 800;
+      box-shadow: 0 6px 20px rgba(6, 199, 85, 0.4); display: none; text-align: center;
       transition: transform 0.2s; white-space: nowrap; z-index: 1000;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
     }
-    .floating-cart:hover { transform: translateX(-50%) scale(1.02); }
+    .floating-cart:hover { transform: translateX(-50%) scale(1.03); }
 
     /* 🚀 右側直立工具群組 */
     .floating-tools {
@@ -348,7 +349,7 @@
         已使用：<span id="modal-used-pts" style="color:#ff4d4d; font-weight:bold; font-size:1.1rem;">0</span> 點
       </div>
 
-      <div style="font-size:0.75rem; color:#ff9900; margin-bottom:12px;">⚠️ 提醒：滿額贈品點數僅限當次訂單兌換</div>
+      <div style="font-size:0.75rem; color:#ff9900; margin-bottom:12px;">⚠️ 提醒：贈品點數僅限當次訂單兌換</div>
 
       <div class="popup-items-wrapper" id="reward-options-container" style="max-height: 52vh; margin-bottom: 12px;"></div>
 
@@ -432,7 +433,7 @@
   <!-- 🎁 獨立滿額自選禮膠囊 -->
   <div class="bottom-reward-pill" id="bottom-reward-pill" onclick="openRewardSelectModal()">
     <div class="bottom-reward-text-row">
-      <span id="bottom-reward-title" style="font-weight:bold; color:#ffcc00;">👉 點此挑選</span>
+      <span id="bottom-reward-title" style="font-weight:bold; color:#ffcc00;">🎁 滿額自選禮</span>
       <span id="bottom-reward-status">差$0</span>
     </div>
     <div class="bottom-reward-progress-bg">
@@ -528,7 +529,6 @@
         const catalogItems = data.products || [];
         const packageItems = data.packages || [];
 
-        // 1. 優先加入「套裝商品」（確保套裝卡片排在「全部」最上方）
         packageItems.forEach(item => {
           if (!item['商品名稱']) return;
           const detail = item['包含內容'] || '';
@@ -561,7 +561,6 @@
           });
         });
 
-        // 2. 再加入一般單品
         catalogItems.forEach(item => {
           if (!item['商品名稱']) return;
           freshProducts.push({
@@ -948,15 +947,12 @@
 
         document.getElementById('bottom-reward-bar').style.width = (earnedPts > 0 && currentLevelProgress === 0 ? 100 : percent) + '%';
         
+        // 💡 滿額門檻動態顯示
+        document.getElementById('bottom-reward-title').innerText = `🎁 滿$${threshold} 自選禮`;
+        
         if (earnedPts > 0) {
-          document.getElementById('bottom-reward-title').innerText = `👉 點此挑選 (${usedPts}/${earnedPts}點)`;
-          if (neededForNext === threshold) {
-            document.getElementById('bottom-reward-status').innerHTML = `<span style="color:#28a745; font-weight:bold;">點此挑選 ➔</span>`;
-          } else {
-            document.getElementById('bottom-reward-status').innerHTML = `差 $${neededForNext} 再贈1點`;
-          }
+          document.getElementById('bottom-reward-status').innerHTML = `<span style="color:#28a745; font-weight:bold;">${usedPts}/${earnedPts}點 ➔</span>`;
         } else {
-          document.getElementById('bottom-reward-title').innerText = `🎁 滿額自選禮`;
           document.getElementById('bottom-reward-status').innerHTML = `差 <strong>NT$${neededForNext}</strong>`;
         }
       } else {
@@ -964,6 +960,7 @@
       }
     }
 
+    // 🎁 自選禮兌換視窗
     function openRewardSelectModal() {
       const totalPrice = calculateCartTotal();
       const threshold = parseInt(siteSettings['滿額門檻']) || 0;
@@ -1057,7 +1054,6 @@
       renderCartItems();
     }
 
-    // 💡 下一步攔截防呆提示
     function goToCartStep2() {
       if (Object.keys(selectedItems).length === 0) return;
       
@@ -1070,7 +1066,7 @@
         const unUsedPts = parseFloat((earnedPts - usedPts).toFixed(2));
         
         if (unUsedPts > 0) {
-          const confirmLeave = confirm(`💡 提醒您：\n您目前還有 ${unUsedPts} 點滿額自選禮尚未挑選！\n（贈品點數僅限當次訂單兌換完畢，不累計至下次）\n\n按下【確定】放棄剩餘贈品，繼續前往結帳\n按下【取消】立即前往挑選贈品`);
+          const confirmLeave = confirm(`💡 提醒您：\n您目前還有 ${unUsedPts} 點滿額自選禮尚未挑選！\n\n按下【確定】放棄剩餘贈品，繼續前往結帳\n按下【取消】立即前往挑選贈品`);
           if (!confirmLeave) {
             openRewardSelectModal();
             return;
@@ -1123,7 +1119,6 @@
       if (threshold && parsedRewardPool.length > 0) {
         const earnedPts = Math.floor(totalPrice / threshold);
         const usedPts = getUsedRewardPoints();
-        const neededForNext = threshold - (totalPrice % threshold);
 
         let chosenListStr = Object.keys(selectedRewards).map(k => `${k} x ${selectedRewards[k]}`).join('、');
         
@@ -1136,9 +1131,10 @@
               </button>
             </div>
             ${chosenListStr ? `<div style="color:#28a745; font-size:0.8rem; margin-top:4px;">🎁 目前已選：${chosenListStr}</div>` : `<div style="color:#ff4d4d; font-size:0.8rem; margin-top:4px;">⚠️ 尚未挑選自選禮，可點上方按鈕自選！</div>`}
+            <div style="color:#888; font-size:0.72rem; margin-top:4px;">⚠️ 提醒：贈品點數僅限當次訂單兌換</div>
           `;
         } else {
-          rewardHint.innerHTML = `💡 還差 NT$${neededForNext} 即可獲得 1 點自選好禮！`;
+          rewardHint.innerHTML = `💡 還差 NT$${threshold - (totalPrice % threshold)} 即可獲得 1 點自選好禮！`;
         }
       } else {
         rewardHint.innerHTML = '';
