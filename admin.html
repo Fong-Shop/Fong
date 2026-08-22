@@ -40,13 +40,15 @@
     textarea { resize: vertical; height: 75px; }
     input:disabled, textarea:disabled { background: #222; color: #888; cursor: not-allowed; }
 
-    .action-row { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 15px; }
+    /* 頂部工具列 */
+    .action-toolbar { display: flex; gap: 8px; margin-bottom: 18px; align-items: center; }
     .btn-mini {
-      padding: 6px 12px; background: #333; color: #fff; border: 1px solid #555;
-      border-radius: 6px; font-size: 0.82rem; cursor: pointer; font-weight: bold;
+      padding: 8px 12px; background: #333; color: #fff; border: 1px solid #555;
+      border-radius: 6px; font-size: 0.85rem; cursor: pointer; font-weight: bold; transition: background 0.2s;
     }
     .btn-mini:hover { background: #444; }
     .btn-del { background: #7a1c1c; border-color: #ff4d4d; }
+    .btn-del:hover { background: #9c2424; }
 
     .image-preview-container { display: flex; gap: 10px; align-items: center; margin-top: 5px; }
     .img-preview { width: 65px; height: 65px; border-radius: 6px; object-fit: cover; background: #000; border: 1px solid #444; display: none; }
@@ -200,16 +202,10 @@
 
     <!-- 📦 1. 單品管理表單 -->
     <div id="sec-products">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <label style="margin:0;">單品選擇：</label>
-        <div class="action-row" style="margin:0; gap:6px;">
-          <button class="btn-mini" style="background:#007bff; border-color:#007bff;" onclick="openSortEditor('product')">🔃 列表/排序/上下架</button>
-          <button class="btn-mini btn-del" id="btn-del-product" style="display:none;" onclick="deleteCurrentItem('product')">🗑️ 刪除</button>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <select id="select-product" onchange="fillProductForm()"><option value="">-- ➕ 新增單品 --</option></select>
+      <div class="action-toolbar">
+        <button class="btn-mini" style="background:#28a745; border-color:#28a745;" onclick="resetProductForm()">➕ 清空/新增單品</button>
+        <button class="btn-mini" style="background:#007bff; border-color:#007bff;" onclick="openSortEditor('product')">🔃 列表/排序/上下架</button>
+        <button class="btn-mini btn-del" id="btn-del-product" style="display:none;" onclick="deleteCurrentItem('product')">🗑️ 刪除</button>
       </div>
 
       <div class="form-group"><label>商品名稱：</label><input type="text" id="p-title" placeholder="名稱"></div>
@@ -231,25 +227,17 @@
         <div class="form-group" style="flex:1;"><label>原價：</label><input type="number" id="p-originalPrice"></div>
         <div class="form-group" style="flex:1;"><label>特價：</label><input type="number" id="p-specialPrice"></div>
       </div>
-      <div style="display:flex; gap:10px;">
-        <div class="form-group" style="flex:1;"><label>分類：</label><input type="text" id="p-category" placeholder="天上飛"></div>
-        <div class="form-group" style="flex:1;"><label>狀態：</label><select id="p-status"><option value="">上架中</option><option value="N">下架 (N)</option></select></div>
-      </div>
+      <div class="form-group"><label>分類：</label><input type="text" id="p-category" placeholder="天上飛"></div>
+
       <button class="btn-submit" id="btn-save-product" onclick="saveProduct()">💾 儲存單品</button>
     </div>
 
     <!-- 🎁 2. 套裝管理表單 -->
     <div id="sec-packages" style="display:none;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <label style="margin:0;">套裝選擇：</label>
-        <div class="action-row" style="margin:0; gap:6px;">
-          <button class="btn-mini" style="background:#007bff; border-color:#007bff;" onclick="openSortEditor('package')">🔃 列表/排序/上下架</button>
-          <button class="btn-mini btn-del" id="btn-del-package" style="display:none;" onclick="deleteCurrentItem('package')">🗑️ 刪除</button>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <select id="select-package" onchange="fillPackageForm()"><option value="">-- ➕ 新增套裝 --</option></select>
+      <div class="action-toolbar">
+        <button class="btn-mini" style="background:#28a745; border-color:#28a745;" onclick="resetPackageForm()">➕ 清空/新增套裝</button>
+        <button class="btn-mini" style="background:#007bff; border-color:#007bff;" onclick="openSortEditor('package')">🔃 列表/排序/上下架</button>
+        <button class="btn-mini btn-del" id="btn-del-package" style="display:none;" onclick="deleteCurrentItem('package')">🗑️ 刪除</button>
       </div>
 
       <div class="form-group"><label>套裝名稱：</label><input type="text" id="pkg-title" placeholder="名稱"></div>
@@ -264,10 +252,8 @@
         </div>
         <div class="form-group" style="flex:1;"><label>特價：</label><input type="number" id="pkg-specialPrice"></div>
       </div>
-      <div style="display:flex; gap:10px;">
-        <div class="form-group" style="flex:1;"><label>分類：</label><input type="text" id="pkg-category" value="超值套裝"></div>
-        <div class="form-group" style="flex:1;"><label>狀態：</label><select id="pkg-status"><option value="">上架中</option><option value="N">下架</option></select></div>
-      </div>
+      <div class="form-group"><label>分類：</label><input type="text" id="pkg-category" value="超值套裝"></div>
+
       <button class="btn-submit" id="btn-save-package" onclick="savePackage()">💾 儲存套裝</button>
     </div>
 
@@ -309,6 +295,8 @@
   let siteData = { products: [], packages: [], settings: {} };
   let currentUploadTarget = "";
   let currentUIType = "";
+  let currentEditProductIndex = -1;
+  let currentEditPackageIndex = -1;
 
   function checkSavedAuth() {
     if (localStorage.getItem('fong_admin_key')) {
@@ -380,19 +368,8 @@
       const data = await res.json();
       if (!data.success && data.error) return alert("後端傳回錯誤：" + data.error);
       siteData = data;
-      renderDropdowns();
       fillSettingsForm();
     } catch (e) { alert("讀取資料失敗：請檢查 API 網址與網路設定"); }
-  }
-
-  function renderDropdowns() {
-    const pSelect = document.getElementById('select-product');
-    pSelect.innerHTML = '<option value="">-- ➕ 新增單品 --</option>';
-    (siteData.products || []).forEach((p, idx) => { pSelect.innerHTML += `<option value="${idx}">${p['商品名稱']}</option>`; });
-
-    const pkgSelect = document.getElementById('select-package');
-    pkgSelect.innerHTML = '<option value="">-- ➕ 新增套裝 --</option>';
-    (siteData.packages || []).forEach((pkg, idx) => { pkgSelect.innerHTML += `<option value="${idx}">${pkg['商品名稱']}</option>`; });
   }
 
   function switchTab(tab) {
@@ -421,49 +398,26 @@
     return sum;
   }
 
-  function fillProductForm() {
-    const idx = document.getElementById('select-product').value;
-    const delBtn = document.getElementById('btn-del-product');
-    if (idx === "") {
-      delBtn.style.display = 'none';
-      document.getElementById('p-title').value = ''; document.getElementById('p-image').value = '';
-      document.getElementById('p-youtube').value = ''; document.getElementById('p-originalPrice').value = '';
-      document.getElementById('p-specialPrice').value = ''; document.getElementById('p-category').value = '';
-      document.getElementById('p-status').value = ''; document.getElementById('p-image-preview').style.display = 'none';
-    } else {
-      delBtn.style.display = 'inline-block';
-      const p = siteData.products[idx];
-      document.getElementById('p-title').value = p['商品名稱']; document.getElementById('p-image').value = p['圖片檔名'];
-      document.getElementById('p-youtube').value = p['影片網址']; document.getElementById('p-originalPrice').value = p['原價'];
-      document.getElementById('p-specialPrice').value = p['特價']; document.getElementById('p-category').value = p['分類'];
-      document.getElementById('p-status').value = p['狀態'];
-      const imgUrl = formatImageUrl(p['圖片檔名']);
-      const prev = document.getElementById('p-image-preview');
-      if (imgUrl) { prev.src = imgUrl; prev.style.display = 'block'; } else { prev.style.display = 'none'; }
-    }
+  function resetProductForm() {
+    currentEditProductIndex = -1;
+    document.getElementById('btn-del-product').style.display = 'none';
+    document.getElementById('p-title').value = ''; 
+    document.getElementById('p-image').value = '';
+    document.getElementById('p-youtube').value = ''; 
+    document.getElementById('p-originalPrice').value = '';
+    document.getElementById('p-specialPrice').value = ''; 
+    document.getElementById('p-category').value = '';
+    document.getElementById('p-image-preview').style.display = 'none';
   }
 
-  function fillPackageForm() {
-    const idx = document.getElementById('select-package').value;
-    const delBtn = document.getElementById('btn-del-package');
-    if (idx === "") {
-      delBtn.style.display = 'none';
-      document.getElementById('pkg-title').value = ''; document.getElementById('pkg-detail').value = '';
-      document.getElementById('pkg-originalPrice').value = ''; document.getElementById('pkg-specialPrice').value = '';
-      document.getElementById('pkg-category').value = '超值套裝'; document.getElementById('pkg-status').value = '';
-    } else {
-      delBtn.style.display = 'inline-block';
-      const pkg = siteData.packages[idx];
-      const detailStr = pkg['包含內容'] || '';
-      document.getElementById('pkg-title').value = pkg['商品名稱']; 
-      document.getElementById('pkg-detail').value = detailStr;
-      
-      const calcPrice = calculateDetailTotalSum(detailStr);
-      document.getElementById('pkg-originalPrice').value = pkg['原價'] ? pkg['原價'] : (calcPrice > 0 ? calcPrice : '');
-      document.getElementById('pkg-specialPrice').value = pkg['特價']; 
-      document.getElementById('pkg-category').value = pkg['分類'] || '超值套裝'; 
-      document.getElementById('pkg-status').value = pkg['狀態'];
-    }
+  function resetPackageForm() {
+    currentEditPackageIndex = -1;
+    document.getElementById('btn-del-package').style.display = 'none';
+    document.getElementById('pkg-title').value = ''; 
+    document.getElementById('pkg-detail').value = '';
+    document.getElementById('pkg-originalPrice').value = ''; 
+    document.getElementById('pkg-specialPrice').value = '';
+    document.getElementById('pkg-category').value = '超值套裝';
   }
 
   function fillSettingsForm() {
@@ -549,8 +503,7 @@
       alert(res.message);
       if (res.success) {
         await loadAllData();
-        document.getElementById(`select-${type}`).value = "";
-        type === 'product' ? fillProductForm() : fillPackageForm();
+        type === 'product' ? resetProductForm() : resetPackageForm();
       }
     } catch(e) { alert("刪除失敗"); }
   }
@@ -559,6 +512,10 @@
     const title = document.getElementById('p-title').value.trim();
     if (!title) return alert('請填寫商品名稱！');
     document.getElementById('btn-save-product').innerText = '⏳ 儲存中...';
+    
+    // 保留原本的 status 狀態 (若有編輯已有項目)
+    const existingStatus = currentEditProductIndex !== -1 ? (siteData.products[currentEditProductIndex]['狀態'] || '') : '';
+
     try {
       const res = await callAPI("saveProduct", {
         product: {
@@ -567,7 +524,7 @@
           originalPrice: document.getElementById('p-originalPrice').value,
           specialPrice: document.getElementById('p-specialPrice').value,
           category: document.getElementById('p-category').value.trim(),
-          status: document.getElementById('p-status').value
+          status: existingStatus
         }
       });
       alert(res.message); if (res.success) loadAllData();
@@ -578,6 +535,10 @@
     const title = document.getElementById('pkg-title').value.trim();
     if (!title) return alert('請填寫套裝名稱！');
     document.getElementById('btn-save-package').innerText = '⏳ 儲存中...';
+    
+    // 保留原本的 status 狀態
+    const existingStatus = currentEditPackageIndex !== -1 ? (siteData.packages[currentEditPackageIndex]['狀態'] || '') : '';
+
     try {
       const res = await callAPI("savePackage", {
         package: {
@@ -585,7 +546,7 @@
           originalPrice: document.getElementById('pkg-originalPrice').value,
           specialPrice: document.getElementById('pkg-specialPrice').value,
           category: document.getElementById('pkg-category').value.trim(),
-          status: document.getElementById('pkg-status').value,
+          status: existingStatus,
           packageDetail: document.getElementById('pkg-detail').value.trim()
         }
       });
@@ -616,7 +577,7 @@
     document.getElementById('ui-modal').style.display = 'none'; 
   }
 
-  /* 💡 整合：點擊標題載入編輯 + 拖曳排序 + 勾選上下架 */
+  /* 💡 開啟列表/排序/上下架三合一編輯器 */
   function openSortEditor(type) {
     currentUIType = 'sort_' + type;
     document.getElementById('ui-price-summary').style.display = 'none';
@@ -669,12 +630,38 @@
     const list = isProd ? siteData.products : siteData.packages;
     const idx = list.findIndex(p => p['商品名稱'] === title);
     if (idx !== -1) {
-      const selectId = isProd ? 'select-product' : 'select-package';
-      document.getElementById(selectId).value = idx;
-      isProd ? fillProductForm() : fillPackageForm();
-      const formEl = document.getElementById(isProd ? 'p-title' : 'pkg-title');
-      formEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      formEl.focus();
+      const p = list[idx];
+      if (isProd) {
+        currentEditProductIndex = idx;
+        document.getElementById('btn-del-product').style.display = 'inline-block';
+        document.getElementById('p-title').value = p['商品名稱'] || '';
+        document.getElementById('p-image').value = p['圖片檔名'] || '';
+        document.getElementById('p-youtube').value = p['影片網址'] || '';
+        document.getElementById('p-originalPrice').value = p['原價'] || '';
+        document.getElementById('p-specialPrice').value = p['特價'] || '';
+        document.getElementById('p-category').value = p['分類'] || '';
+        const imgUrl = formatImageUrl(p['圖片檔名']);
+        const prev = document.getElementById('p-image-preview');
+        if (imgUrl) { prev.src = imgUrl; prev.style.display = 'block'; } else { prev.style.display = 'none'; }
+        
+        const formEl = document.getElementById('p-title');
+        formEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        formEl.focus();
+      } else {
+        currentEditPackageIndex = idx;
+        document.getElementById('btn-del-package').style.display = 'inline-block';
+        const detailStr = p['包含內容'] || '';
+        document.getElementById('pkg-title').value = p['商品名稱'] || '';
+        document.getElementById('pkg-detail').value = detailStr;
+        const calcPrice = calculateDetailTotalSum(detailStr);
+        document.getElementById('pkg-originalPrice').value = p['原價'] ? p['原價'] : (calcPrice > 0 ? calcPrice : '');
+        document.getElementById('pkg-specialPrice').value = p['特價'] || '';
+        document.getElementById('pkg-category').value = p['分類'] || '超值套裝';
+        
+        const formEl = document.getElementById('pkg-title');
+        formEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        formEl.focus();
+      }
     }
   }
 
