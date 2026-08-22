@@ -41,12 +41,14 @@
     input:disabled, textarea:disabled { background: #222; color: #888; cursor: not-allowed; }
 
     /* 頂部工具列 */
-    .action-toolbar { display: flex; gap: 8px; margin-bottom: 18px; align-items: center; }
+    .action-toolbar { display: flex; gap: 8px; margin-bottom: 18px; align-items: center; flex-wrap: wrap; }
     .btn-mini {
       padding: 8px 12px; background: #333; color: #fff; border: 1px solid #555;
       border-radius: 6px; font-size: 0.85rem; cursor: pointer; font-weight: bold; transition: background 0.2s;
     }
     .btn-mini:hover { background: #444; }
+    .btn-clean { background: #28a745; border-color: #28a745; color: #fff; }
+    .btn-clean:hover { background: #218838; }
     .btn-del { background: #7a1c1c; border-color: #ff4d4d; }
     .btn-del:hover { background: #9c2424; }
 
@@ -54,7 +56,7 @@
     .img-preview { width: 65px; height: 65px; border-radius: 6px; object-fit: cover; background: #000; border: 1px solid #444; display: none; }
     
     .btn-action {
-      background: #ff9900; color: #000; padding: 6px 10px; border-radius: 6px;
+      background: #ff9900; color: #000; padding: 5px 9px; border-radius: 6px;
       font-weight: bold; cursor: pointer; border: none; font-size: 0.8rem;
     }
 
@@ -153,6 +155,11 @@
       color: #ffcc00; font-weight: bold; border-radius: 4px; font-size: 0.95rem;
     }
     input[type="checkbox"] { width: 18px; height: 18px; accent-color: #28a745; cursor: pointer; }
+
+    /* 🖼️ 歷史圖庫相簿樣式 */
+    .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .gallery-thumb { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; border: 2px solid #333; cursor: pointer; transition: transform 0.2s, border-color 0.2s; }
+    .gallery-thumb:hover { transform: scale(1.05); border-color: #ffcc00; }
   </style>
 </head>
 <body>
@@ -169,7 +176,7 @@
     </div>
   </div>
 
-  <!-- 📝 視覺化選擇器與拖曳排序彈窗 -->
+  <!-- 📝 視覺化編輯器與拖曳排序彈窗 -->
   <div class="modal-overlay" id="ui-modal">
     <div class="modal-box">
       <div class="modal-header">
@@ -181,6 +188,18 @@
       </div>
       <div class="modal-list" id="ui-modal-list"></div>
       <button class="btn-submit" id="ui-modal-save-btn" style="margin-top: 0; background: #ff9900; color: #000;" onclick="saveUISelection()">✅ 確認儲存</button>
+    </div>
+  </div>
+
+  <!-- 🖼️ 歷史圖庫選擇彈窗 -->
+  <div class="modal-overlay" id="gallery-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">🖼️ 從歷史圖庫挑選照片</h3>
+        <div class="modal-close" onclick="closeGalleryModal()">×</div>
+      </div>
+      <div style="font-size:0.8rem; color:#aaa; margin-bottom:10px;">點擊任意照片即可自動帶入網址與預覽：</div>
+      <div class="modal-list gallery-grid" id="gallery-modal-list" style="max-height: 60vh;"></div>
     </div>
   </div>
 
@@ -203,7 +222,7 @@
     <!-- 📦 1. 單品管理表單 -->
     <div id="sec-products">
       <div class="action-toolbar">
-        <button class="btn-mini" style="background:#28a745; border-color:#28a745;" onclick="resetProductForm()">🧹 清空欄位</button>
+        <button class="btn-mini btn-clean" onclick="resetProductForm()">🧹 清空欄位</button>
         <button class="btn-mini" style="background:#007bff; border-color:#007bff;" onclick="openSortEditor('product')">🔃 列表/排序/上下架</button>
         <button class="btn-mini btn-del" id="btn-del-product" style="display:none;" onclick="deleteCurrentItem('product')">🗑️ 刪除</button>
       </div>
@@ -215,9 +234,10 @@
           <div style="display:flex; gap:6px;">
             <button class="btn-action" onclick="triggerPhoto('camera', 'p-image')">📷 拍照</button>
             <button class="btn-action" style="background:#00c300; color:#fff;" onclick="triggerPhoto('gallery', 'p-image')">🖼️ 選圖</button>
+            <button class="btn-action" style="background:#e056fd; color:#fff;" onclick="openGalleryPicker('p-image', 'p-image-preview')">🖼️ 圖庫</button>
           </div>
         </label>
-        <input type="text" id="p-image" placeholder="https://...">
+        <input type="text" id="p-image" placeholder="https://..." oninput="updateImagePreview('p-image', 'p-image-preview')">
         <div class="image-preview-container">
           <img id="p-image-preview" class="img-preview" alt="預覽"><span id="p-image-status" style="font-size:0.8rem; color:#aaa;"></span>
         </div>
@@ -235,7 +255,7 @@
     <!-- 🎁 2. 套裝管理表單 -->
     <div id="sec-packages" style="display:none;">
       <div class="action-toolbar">
-        <button class="btn-mini" style="background:#28a745; border-color:#28a745;" onclick="resetPackageForm()">🧹 清空欄位</button>
+        <button class="btn-mini btn-clean" onclick="resetPackageForm()">🧹 清空欄位</button>
         <button class="btn-mini" style="background:#007bff; border-color:#007bff;" onclick="openSortEditor('package')">🔃 列表/排序/上下架</button>
         <button class="btn-mini btn-del" id="btn-del-package" style="display:none;" onclick="deleteCurrentItem('package')">🗑️ 刪除</button>
       </div>
@@ -243,7 +263,7 @@
       <div class="form-group"><label>套裝名稱：</label><input type="text" id="pkg-title" placeholder="名稱"></div>
       <div class="form-group">
         <label>包含內容：<button class="btn-action" onclick="openPackageEditor()">✏️ 編輯內容</button></label>
-        <textarea id="pkg-detail" disabled placeholder="點上方按鈕自動生成"></textarea>
+        <textarea id="pkg-detail" disabled placeholder="點右上方『✏️ 編輯內容』按鈕自動生成加減點選組合"></textarea>
       </div>
       <div style="display:flex; gap:10px;">
         <div class="form-group" style="flex:1;">
@@ -264,12 +284,12 @@
       <div class="form-group"><label>🎁 滿額門檻 (達標集1點)：</label><input type="number" id="set-threshold"></div>
       
       <div class="form-group">
-        <label>🎁 滿額贈品池：<button class="btn-action" onclick="openRewardEditor()">✏️ 選擇贈品</button></label>
-        <textarea id="set-rewards" disabled></textarea>
+        <label>🎁 滿額贈品池：<button class="btn-action" onclick="openRewardEditor()">✏️ 選擇贈品點數</button></label>
+        <textarea id="set-rewards" disabled placeholder="點右上方『✏️ 選擇贈品點數』選取品項與設定點數"></textarea>
       </div>
       <div class="form-group">
-        <label>🔥 主打推播：<button class="btn-action" onclick="openFeaturedEditor()">✏️ 勾選主打</button></label>
-        <textarea id="set-featured" disabled></textarea>
+        <label>🔥 主打推播：<button class="btn-action" onclick="openFeaturedEditor()">✏️ 勾選主打商品</button></label>
+        <textarea id="set-featured" disabled placeholder="點右上方『✏️ 勾選主打商品』選擇推播彈窗品項"></textarea>
       </div>
       
       <div class="form-group">
@@ -292,11 +312,13 @@
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdvebTnsOSgEURWczwLjLuQPIz9tbHWKSpEIgsT38V5jR7vzHUHbFiPGtH5F0rQJEZWA/exec";
   let adminKey = "";
-  let siteData = { products: [], packages: [], settings: {} };
+  let siteData = { products: [], packages: [], settings: {}, gallery: [] };
   let currentUploadTarget = "";
   let currentUIType = "";
   let currentEditProductIndex = -1;
   let currentEditPackageIndex = -1;
+  let activeGalleryTargetInput = "";
+  let activeGalleryTargetPreview = "";
 
   function checkSavedAuth() {
     if (localStorage.getItem('fong_admin_key')) {
@@ -389,7 +411,7 @@
       const match = pStr.match(/^(.*?)\s*[*xX]\s*(\d+(\.\d+)?)$/);
       const pName = match ? match[1].trim() : pStr;
       const pQty = match ? parseFloat(match[2]) : 1;
-      const target = (siteData.products || []).find(p => p['商品名稱'] === pName);
+      const target = (siteData.products || []).find(p => (p['商品名稱'] || p.title) === pName);
       if (target) {
         const unitPrice = parseInt(target['原價']) || parseInt(target['特價']) || 0;
         sum += unitPrice * pQty;
@@ -399,6 +421,7 @@
   }
 
   function resetProductForm() {
+    if (document.getElementById('p-title').value.trim() && !confirm("確定要清空目前填寫的單品欄位嗎？")) return;
     currentEditProductIndex = -1;
     document.getElementById('btn-del-product').style.display = 'none';
     document.getElementById('p-title').value = ''; 
@@ -408,9 +431,11 @@
     document.getElementById('p-specialPrice').value = ''; 
     document.getElementById('p-category').value = '';
     document.getElementById('p-image-preview').style.display = 'none';
+    document.getElementById('p-image-status').innerText = '';
   }
 
   function resetPackageForm() {
+    if (document.getElementById('pkg-title').value.trim() && !confirm("確定要清空目前填寫的套裝欄位嗎？")) return;
     currentEditPackageIndex = -1;
     document.getElementById('btn-del-package').style.display = 'none';
     document.getElementById('pkg-title').value = ''; 
@@ -431,6 +456,17 @@
     document.getElementById('set-order-footer').value = s['訂單結尾'] || '';
   }
 
+  function updateImagePreview(inputId, previewId) {
+    const url = document.getElementById(inputId).value.trim();
+    const prev = document.getElementById(previewId);
+    if (url) {
+      prev.src = formatImageUrl(url);
+      prev.style.display = 'block';
+    } else {
+      prev.style.display = 'none';
+    }
+  }
+
   function triggerPhoto(mode, targetInputId) {
     currentUploadTarget = targetInputId;
     if (mode === 'camera') {
@@ -444,10 +480,10 @@
     if (!input.files || !input.files[0]) return;
     const file = input.files[0];
     const statusSpan = document.getElementById('p-image-status');
-    statusSpan.innerText = '📷 壓縮處理中...';
+    if (statusSpan) statusSpan.innerText = '📷 壓縮處理中...';
 
     const base64 = await compressImage(file, 1024, 0.8);
-    statusSpan.innerText = '🚀 正在上傳至專屬資料夾...';
+    if (statusSpan) statusSpan.innerText = '🚀 正在上傳至 ImgBB...';
 
     try {
       const res = await fetch(GAS_API_URL, {
@@ -457,11 +493,11 @@
       const result = await res.json();
       if (result.success) {
         document.getElementById(currentUploadTarget).value = result.url;
-        statusSpan.innerText = '✅ 上傳成功！';
+        if (statusSpan) statusSpan.innerText = '✅ 上傳成功！';
         const prev = document.getElementById('p-image-preview');
         prev.src = result.url; prev.style.display = 'block';
-      } else { statusSpan.innerText = '❌ ' + result.message; }
-    } catch (e) { statusSpan.innerText = '❌ 網路錯誤'; }
+      } else { if (statusSpan) statusSpan.innerText = '❌ ' + result.message; }
+    } catch (e) { if (statusSpan) statusSpan.innerText = '❌ 網路錯誤'; }
     input.value = '';
   }
 
@@ -481,6 +517,33 @@
       };
     });
   }
+
+  function openGalleryPicker(inputId, previewId) {
+    activeGalleryTargetInput = inputId;
+    activeGalleryTargetPreview = previewId;
+    const galleryList = siteData.gallery || [];
+    const container = document.getElementById('gallery-modal-list');
+    container.innerHTML = '';
+
+    if (galleryList.length === 0) {
+      container.innerHTML = '<div style="color:#888; text-align:center; padding:20px; grid-column:span 3;">尚無歷史圖片紀錄</div>';
+    } else {
+      galleryList.forEach(url => {
+        const img = document.createElement('img');
+        img.className = 'gallery-thumb';
+        img.src = formatImageUrl(url);
+        img.onclick = () => {
+          document.getElementById(activeGalleryTargetInput).value = url;
+          updateImagePreview(activeGalleryTargetInput, activeGalleryTargetPreview);
+          closeGalleryModal();
+        };
+        container.appendChild(img);
+      });
+    }
+    document.getElementById('gallery-modal').style.display = 'flex';
+  }
+
+  function closeGalleryModal() { document.getElementById('gallery-modal').style.display = 'none'; }
 
   async function callAPI(action, payload) {
     payload.adminKey = adminKey;
@@ -513,7 +576,6 @@
     if (!title) return alert('請填寫商品名稱！');
     document.getElementById('btn-save-product').innerText = '⏳ 儲存中...';
     
-    // 保留原本的 status 狀態 (若有編輯已有項目)
     const existingStatus = currentEditProductIndex !== -1 ? (siteData.products[currentEditProductIndex]['狀態'] || '') : '';
 
     try {
@@ -536,7 +598,6 @@
     if (!title) return alert('請填寫套裝名稱！');
     document.getElementById('btn-save-package').innerText = '⏳ 儲存中...';
     
-    // 保留原本的 status 狀態
     const existingStatus = currentEditPackageIndex !== -1 ? (siteData.packages[currentEditPackageIndex]['狀態'] || '') : '';
 
     try {
@@ -577,7 +638,7 @@
     document.getElementById('ui-modal').style.display = 'none'; 
   }
 
-  /* 💡 開啟列表/排序/上下架三合一編輯器 */
+  /* 💡 1. 列表/排序/上下架 編輯器 */
   function openSortEditor(type) {
     currentUIType = 'sort_' + type;
     document.getElementById('ui-price-summary').style.display = 'none';
@@ -587,7 +648,7 @@
     const list = isProd ? siteData.products : siteData.packages;
     let html = '';
     list.forEach((item, index) => {
-      const title = item['商品名稱'];
+      const title = item['商品名稱'] || item.title || item['套裝名稱'];
       const cat = item['分類'] ? ` [${item['分類']}]` : '';
       const isOffShelf = (item['狀態'] || '').toString().trim().toUpperCase() === 'N';
       const checkedAttr = isOffShelf ? '' : 'checked';
@@ -628,21 +689,19 @@
     closeUIModal();
     const isProd = type === 'product';
     const list = isProd ? siteData.products : siteData.packages;
-    const idx = list.findIndex(p => p['商品名稱'] === title);
+    const idx = list.findIndex(p => (p['商品名稱'] || p.title || p['套裝名稱']) === title);
     if (idx !== -1) {
       const p = list[idx];
       if (isProd) {
         currentEditProductIndex = idx;
         document.getElementById('btn-del-product').style.display = 'inline-block';
-        document.getElementById('p-title').value = p['商品名稱'] || '';
-        document.getElementById('p-image').value = p['圖片檔名'] || '';
-        document.getElementById('p-youtube').value = p['影片網址'] || '';
-        document.getElementById('p-originalPrice').value = p['原價'] || '';
-        document.getElementById('p-specialPrice').value = p['特價'] || '';
-        document.getElementById('p-category').value = p['分類'] || '';
-        const imgUrl = formatImageUrl(p['圖片檔名']);
-        const prev = document.getElementById('p-image-preview');
-        if (imgUrl) { prev.src = imgUrl; prev.style.display = 'block'; } else { prev.style.display = 'none'; }
+        document.getElementById('p-title').value = p['商品名稱'] || p.title || '';
+        document.getElementById('p-image').value = p['圖片檔名'] || p.image || '';
+        document.getElementById('p-youtube').value = p['影片網址'] || p.youtube || '';
+        document.getElementById('p-originalPrice').value = p['原價'] || p.originalPrice || '';
+        document.getElementById('p-specialPrice').value = p['特價'] || p.specialPrice || '';
+        document.getElementById('p-category').value = p['分類'] || p.category || '';
+        updateImagePreview('p-image', 'p-image-preview');
         
         const formEl = document.getElementById('p-title');
         formEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -650,12 +709,12 @@
       } else {
         currentEditPackageIndex = idx;
         document.getElementById('btn-del-package').style.display = 'inline-block';
-        const detailStr = p['包含內容'] || '';
-        document.getElementById('pkg-title').value = p['商品名稱'] || '';
+        const detailStr = p['包含內容'] || p.packageDetail || '';
+        document.getElementById('pkg-title').value = p['商品名稱'] || p.title || p['套裝名稱'] || '';
         document.getElementById('pkg-detail').value = detailStr;
         const calcPrice = calculateDetailTotalSum(detailStr);
         document.getElementById('pkg-originalPrice').value = p['原價'] ? p['原價'] : (calcPrice > 0 ? calcPrice : '');
-        document.getElementById('pkg-specialPrice').value = p['特價'] || '';
+        document.getElementById('pkg-specialPrice').value = p['特價'] || p.specialPrice || '';
         document.getElementById('pkg-category').value = p['分類'] || '超值套裝';
         
         const formEl = document.getElementById('pkg-title');
@@ -750,7 +809,7 @@
     if (currentUIType !== 'package') return;
     let liveSum = 0;
     siteData.products.forEach(p => {
-      const title = p['商品名稱'];
+      const title = p['商品名稱'] || p.title;
       const el = document.getElementById(`ui-val-${title}`);
       if (el) {
         const qty = parseInt(el.value) || 0;
@@ -775,18 +834,19 @@
     updateModalLiveTotal();
   }
 
+  /* 💡 2. 套裝內容「加減點選 + 原價自動試算」視覺化編輯器 */
   function openPackageEditor() {
     currentUIType = 'package';
-    document.getElementById('ui-modal-title').innerText = '📦 編輯套裝內容';
+    document.getElementById('ui-modal-title').innerText = '📦 編輯套裝內容 (點選加減與試算金額)';
     document.getElementById('ui-price-summary').style.display = 'block';
-    document.getElementById('ui-modal-save-btn').innerText = '✅ 確認儲存';
+    document.getElementById('ui-modal-save-btn').innerText = '✅ 確認帶入組合與金額';
     document.getElementById('ui-modal-save-btn').onclick = saveUISelection;
     const currentDict = parseCurrentStr(document.getElementById('pkg-detail').value);
     
     let html = '';
     siteData.products.forEach(p => {
       if(p['狀態'] === 'N') return;
-      const title = p['商品名稱'];
+      const title = p['商品名稱'] || p.title;
       const unitPrice = parseInt(p['原價']) || parseInt(p['特價']) || 0;
       const qty = currentDict[title] || 0;
       html += `
@@ -804,18 +864,19 @@
     document.getElementById('ui-modal').style.display = 'flex';
   }
 
+  /* 💡 3. 滿額贈品「點數設定」視覺化編輯器 */
   function openRewardEditor() {
     currentUIType = 'reward';
-    document.getElementById('ui-modal-title').innerText = '🎁 編輯滿額贈品與點數';
+    document.getElementById('ui-modal-title').innerText = '🎁 編輯滿額贈品與所需點數';
     document.getElementById('ui-price-summary').style.display = 'none';
-    document.getElementById('ui-modal-save-btn').innerText = '✅ 確認儲存';
+    document.getElementById('ui-modal-save-btn').innerText = '✅ 確認儲存贈品設定';
     document.getElementById('ui-modal-save-btn').onclick = saveUISelection;
     const currentDict = parseCurrentStr(document.getElementById('set-rewards').value, true);
     
     let html = '';
     siteData.products.forEach(p => {
       if(p['狀態'] === 'N') return;
-      const title = p['商品名稱'];
+      const title = p['商品名稱'] || p.title;
       const pts = currentDict[title] !== undefined ? currentDict[title] : '';
       html += `
         <div class="ui-item">
@@ -831,11 +892,12 @@
     document.getElementById('ui-modal').style.display = 'flex';
   }
 
+  /* 💡 4. 主打推播「勾選清單」視覺化編輯器 */
   function openFeaturedEditor() {
     currentUIType = 'featured';
-    document.getElementById('ui-modal-title').innerText = '🔥 勾選主打推播商品';
+    document.getElementById('ui-modal-title').innerText = '🔥 勾選主打推播彈窗商品';
     document.getElementById('ui-price-summary').style.display = 'none';
-    document.getElementById('ui-modal-save-btn').innerText = '✅ 確認儲存';
+    document.getElementById('ui-modal-save-btn').innerText = '✅ 確認儲存主打品項';
     document.getElementById('ui-modal-save-btn').onclick = saveUISelection;
     const currentDict = parseCurrentStr(document.getElementById('set-featured').value);
     
@@ -843,7 +905,7 @@
     const allItems = [...siteData.packages, ...siteData.products];
     allItems.forEach(p => {
       if(p['狀態'] === 'N') return;
-      const title = p['商品名稱'] || p['套裝名稱'];
+      const title = p['商品名稱'] || p['套裝名稱'] || p.title;
       const checked = currentDict[title] ? 'checked' : '';
       html += `
         <label class="ui-item" style="cursor:pointer;">
@@ -859,7 +921,7 @@
     let resultArr = [];
     if (currentUIType === 'package') {
       siteData.products.forEach(p => {
-        const title = p['商品名稱']; const el = document.getElementById(`ui-val-${title}`);
+        const title = p['商品名稱'] || p.title; const el = document.getElementById(`ui-val-${title}`);
         if(el && parseInt(el.value) > 0) resultArr.push(`${title}*${parseInt(el.value)}`);
       });
       const detailStr = resultArr.join(', ');
@@ -870,7 +932,7 @@
     } 
     else if (currentUIType === 'reward') {
       siteData.products.forEach(p => {
-        const title = p['商品名稱']; const el = document.getElementById(`ui-val-${title}`);
+        const title = p['商品名稱'] || p.title; const el = document.getElementById(`ui-val-${title}`);
         if(el && parseFloat(el.value) > 0) resultArr.push(`${title}*${parseFloat(el.value)}`);
       });
       document.getElementById('set-rewards').value = resultArr.join(', ');
@@ -878,7 +940,7 @@
     else if (currentUIType === 'featured') {
       const allItems = [...siteData.packages, ...siteData.products];
       allItems.forEach(p => {
-        const title = p['商品名稱'] || p['套裝名稱'];
+        const title = p['商品名稱'] || p['套裝名稱'] || p.title;
         if(document.getElementById(`ui-check-${title}`)?.checked) resultArr.push(title);
       });
       document.getElementById('set-featured').value = resultArr.join(',');
