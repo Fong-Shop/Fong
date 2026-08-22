@@ -110,17 +110,26 @@
     .drag-item {
       display: flex; justify-content: space-between; align-items: center;
       background: #252525; padding: 10px 12px; border-radius: 8px; border: 1px solid #333;
-      user-select: none; cursor: grab; transition: background 0.2s;
+      user-select: none; transition: background 0.2s;
     }
-    .drag-item:active { cursor: grabbing; background: #333; }
+    .drag-item:hover { border-color: #ff4d4d; }
     .drag-item.dragging { opacity: 0.4; border-color: #ffcc00; }
     .drag-handle { font-size: 1.2rem; color: #888; cursor: grab; padding-right: 10px; }
-    .drag-title { font-size: 0.95rem; font-weight: bold; color: #fff; flex: 1; }
-    .drag-btn-group { display: flex; gap: 4px; }
-    .drag-btn {
-      background: #333; border: 1px solid #555; color: #fff; width: 28px; height: 28px;
-      border-radius: 4px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center;
+    .drag-handle:active { cursor: grabbing; }
+    
+    .drag-title-clickable {
+      font-size: 0.95rem; font-weight: bold; color: #fff; flex: 1; cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
     }
+    .drag-title-clickable:hover { color: #ffcc00; text-decoration: underline; }
+
+    .drag-status-toggle {
+      display: flex; align-items: center; gap: 6px; background: #1a1a1a;
+      padding: 4px 8px; border-radius: 6px; border: 1px solid #444; cursor: pointer;
+    }
+    .drag-status-label { font-size: 0.8rem; font-weight: bold; }
+    .drag-status-label.on { color: #28a745; }
+    .drag-status-label.off { color: #ff4d4d; }
 
     .ui-item {
       display: flex; justify-content: space-between; align-items: center;
@@ -141,7 +150,7 @@
       width: 60px; height: 30px; text-align: center; background: #111; border: 1px solid #555;
       color: #ffcc00; font-weight: bold; border-radius: 4px; font-size: 0.95rem;
     }
-    input[type="checkbox"] { width: 20px; height: 20px; accent-color: #ff4d4d; }
+    input[type="checkbox"] { width: 18px; height: 18px; accent-color: #28a745; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -194,7 +203,7 @@
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
         <label style="margin:0;">單品選擇：</label>
         <div class="action-row" style="margin:0; gap:6px;">
-          <button class="btn-mini" style="background:#007bff; border-color:#007bff;" onclick="openSortEditor('product')">🔃 編輯單品排序</button>
+          <button class="btn-mini" style="background:#007bff; border-color:#007bff;" onclick="openSortEditor('product')">🔃 列表/排序/上下架</button>
           <button class="btn-mini btn-del" id="btn-del-product" style="display:none;" onclick="deleteCurrentItem('product')">🗑️ 刪除</button>
         </div>
       </div>
@@ -234,7 +243,7 @@
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
         <label style="margin:0;">套裝選擇：</label>
         <div class="action-row" style="margin:0; gap:6px;">
-          <button class="btn-mini" style="background:#007bff; border-color:#007bff;" onclick="openSortEditor('package')">🔃 編輯套裝排序</button>
+          <button class="btn-mini" style="background:#007bff; border-color:#007bff;" onclick="openSortEditor('package')">🔃 列表/排序/上下架</button>
           <button class="btn-mini btn-del" id="btn-del-package" style="display:none;" onclick="deleteCurrentItem('package')">🗑️ 刪除</button>
         </div>
       </div>
@@ -262,7 +271,7 @@
       <button class="btn-submit" id="btn-save-package" onclick="savePackage()">💾 儲存套裝</button>
     </div>
 
-    <!-- ⚙️ 3. 網站設定表單 (含訂單抬頭與結尾) -->
+    <!-- ⚙️ 3. 網站設定表單 -->
     <div id="sec-settings" style="display:none;">
       <div class="form-group"><label>📢 公告內容：</label><textarea id="set-announcement"></textarea></div>
       <div class="form-group"><label>💬 LINE 連結：</label><input type="text" id="set-line"></div>
@@ -277,7 +286,6 @@
         <textarea id="set-featured" disabled></textarea>
       </div>
       
-      <!-- 💬 訂單抬頭與訂單結尾動態設定 -->
       <div class="form-group">
         <label>💬 訂單抬頭 (送至LINE的開頭)：</label>
         <input type="text" id="set-order-header" placeholder="例如：想訂購以下商品：">
@@ -608,58 +616,66 @@
     document.getElementById('ui-modal').style.display = 'none'; 
   }
 
+  /* 💡 整合：點擊標題載入編輯 + 拖曳排序 + 勾選上下架 */
   function openSortEditor(type) {
     currentUIType = 'sort_' + type;
     document.getElementById('ui-price-summary').style.display = 'none';
     const isProd = type === 'product';
-    document.getElementById('ui-modal-title').innerText = isProd ? '🔃 編輯單品順序 (拖曳或按上下標)' : '🔃 編輯套裝順序 (拖曳或按上下標)';
+    document.getElementById('ui-modal-title').innerText = isProd ? '🔃 單品列表/排序/上下架' : '🔃 套裝列表/排序/上下架';
     
     const list = isProd ? siteData.products : siteData.packages;
     let html = '';
     list.forEach((item, index) => {
       const title = item['商品名稱'];
       const cat = item['分類'] ? ` [${item['分類']}]` : '';
+      const isOffShelf = (item['狀態'] || '').toString().trim().toUpperCase() === 'N';
+      const checkedAttr = isOffShelf ? '' : 'checked';
+
       html += `
-        <div class="drag-item" draggable="true" data-index="${index}">
-          <span class="drag-handle">☰</span>
-          <span class="drag-title">${title}<span style="color:#ffcc00; font-size:0.75rem;">${cat}</span></span>
-          <div class="drag-btn-group">
-            <button class="drag-btn" onclick="moveSortItem(${index}, -1)">▲</button>
-            <button class="drag-btn" onclick="moveSortItem(${index}, 1)">▼</button>
+        <div class="drag-item" draggable="true" data-title="${title}">
+          <span class="drag-handle" title="按住拖曳排序">☰</span>
+          <div class="drag-title-clickable" onclick="selectAndEditFromModal('${type}', '${title}')">
+            <span>${title}</span>
+            <span style="color:#ffcc00; font-size:0.75rem;">${cat}</span>
           </div>
+          <label class="drag-status-toggle">
+            <input type="checkbox" class="status-check" ${checkedAttr} onchange="updateStatusLabel(this)">
+            <span class="drag-status-label ${isOffShelf ? 'off' : 'on'}">${isOffShelf ? '下架' : '上架'}</span>
+          </label>
         </div>`;
     });
     
     document.getElementById('ui-modal-list').innerHTML = html;
+    document.getElementById('ui-modal-save-btn').innerText = '✅ 儲存狀態與全新排序';
     document.getElementById('ui-modal-save-btn').onclick = saveSortSelection;
     document.getElementById('ui-modal').style.display = 'flex';
     initDragEvents();
   }
 
-  function moveSortItem(index, direction) {
-    const listContainer = document.getElementById('ui-modal-list');
-    const items = Array.from(listContainer.children);
-    const targetIndex = index + direction;
-    if (targetIndex < 0 || targetIndex >= items.length) return;
-
-    if (direction < 0) {
-      listContainer.insertBefore(items[index], items[targetIndex]);
+  function updateStatusLabel(checkbox) {
+    const label = checkbox.nextElementSibling;
+    if (checkbox.checked) {
+      label.innerText = '上架';
+      label.className = 'drag-status-label on';
     } else {
-      listContainer.insertBefore(items[targetIndex], items[index]);
+      label.innerText = '下架';
+      label.className = 'drag-status-label off';
     }
-    reindexSortItems();
   }
 
-  function reindexSortItems() {
-    const items = Array.from(document.getElementById('ui-modal-list').children);
-    items.forEach((item, idx) => {
-      item.setAttribute('data-index', idx);
-      const btns = item.querySelectorAll('.drag-btn');
-      if (btns && btns.length === 2) {
-        btns[0].setAttribute('onclick', `moveSortItem(${idx}, -1)`);
-        btns[1].setAttribute('onclick', `moveSortItem(${idx}, 1)`);
-      }
-    });
+  function selectAndEditFromModal(type, title) {
+    closeUIModal();
+    const isProd = type === 'product';
+    const list = isProd ? siteData.products : siteData.packages;
+    const idx = list.findIndex(p => p['商品名稱'] === title);
+    if (idx !== -1) {
+      const selectId = isProd ? 'select-product' : 'select-package';
+      document.getElementById(selectId).value = idx;
+      isProd ? fillProductForm() : fillPackageForm();
+      const formEl = document.getElementById(isProd ? 'p-title' : 'pkg-title');
+      formEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      formEl.focus();
+    }
   }
 
   function initDragEvents() {
@@ -674,7 +690,6 @@
     list.addEventListener('dragend', (e) => {
       if (draggedItem) draggedItem.classList.remove('dragging');
       draggedItem = null;
-      reindexSortItems();
     });
 
     list.addEventListener('dragover', (e) => {
@@ -704,26 +719,29 @@
   }
 
   async function saveSortSelection() {
-    const items = Array.from(document.getElementById('ui-modal-list').querySelectorAll('.drag-title'));
-    const titles = items.map(el => {
-      let t = el.innerText;
-      if (t.includes('[')) t = t.split('[')[0];
-      return t.trim();
+    const itemEls = Array.from(document.getElementById('ui-modal-list').querySelectorAll('.drag-item'));
+    const items = itemEls.map(el => {
+      const title = el.getAttribute('data-title');
+      const isChecked = el.querySelector('.status-check').checked;
+      return {
+        title: title,
+        status: isChecked ? "" : "N"
+      };
     });
 
     const type = currentUIType.replace('sort_', '');
-    document.getElementById('ui-modal-save-btn').innerText = '⏳ 正在套用新排序...';
+    document.getElementById('ui-modal-save-btn').innerText = '⏳ 正在套用新狀態與排序...';
 
     try {
-      const res = await callAPI("reorderItems", { type: type, titles: titles });
+      const res = await callAPI("reorderItems", { type: type, items: items });
       alert(res.message);
       if (res.success) {
         closeUIModal();
         await loadAllData();
       }
-    } catch(e) { alert("排序儲存失敗"); }
+    } catch(e) { alert("儲存失敗"); }
     finally {
-      document.getElementById('ui-modal-save-btn').innerText = '✅ 確認儲存';
+      document.getElementById('ui-modal-save-btn').innerText = '✅ 儲存狀態與全新排序';
     }
   }
 
@@ -774,6 +792,7 @@
     currentUIType = 'package';
     document.getElementById('ui-modal-title').innerText = '📦 編輯套裝內容';
     document.getElementById('ui-price-summary').style.display = 'block';
+    document.getElementById('ui-modal-save-btn').innerText = '✅ 確認儲存';
     document.getElementById('ui-modal-save-btn').onclick = saveUISelection;
     const currentDict = parseCurrentStr(document.getElementById('pkg-detail').value);
     
@@ -802,6 +821,7 @@
     currentUIType = 'reward';
     document.getElementById('ui-modal-title').innerText = '🎁 編輯滿額贈品與點數';
     document.getElementById('ui-price-summary').style.display = 'none';
+    document.getElementById('ui-modal-save-btn').innerText = '✅ 確認儲存';
     document.getElementById('ui-modal-save-btn').onclick = saveUISelection;
     const currentDict = parseCurrentStr(document.getElementById('set-rewards').value, true);
     
@@ -828,6 +848,7 @@
     currentUIType = 'featured';
     document.getElementById('ui-modal-title').innerText = '🔥 勾選主打推播商品';
     document.getElementById('ui-price-summary').style.display = 'none';
+    document.getElementById('ui-modal-save-btn').innerText = '✅ 確認儲存';
     document.getElementById('ui-modal-save-btn').onclick = saveUISelection;
     const currentDict = parseCurrentStr(document.getElementById('set-featured').value);
     
